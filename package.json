@@ -1,0 +1,35 @@
+{
+  "name": "email-deepest-forward",
+  "version": "1.0.0",
+  "description": "Extract the deepest forwarded email using hybrid MIME and inline parsing",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "private": true,
+  "scripts": {
+    "build": "tsc",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "email",
+    "parser",
+    "forward",
+    "mailparser"
+  ],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/jest": "^30.0.0",
+    "@types/mailparser": "^3.4.6",
+    "@types/node": "^25.0.10",
+    "jest": "^30.2.0",
+    "ts-jest": "^29.4.6",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "any-date-parser": "^2.2.3",
+    "email-forward-parser": "^1.7.2",
+    "mailparser": "^3.9.1"
+  }
+}

@@ -1,0 +1,278 @@
+Delivered-To: original@source.com
+Received: by 2002:a17:907:3e8c:b0:b76:be28:f127 with SMTP id hs12csp1792386ejc;
+        Mon, 26 Jan 2026 17:35:22 -0800 (PST)
+X-Forwarded-Encrypted: i=3; AJvYcCUKf2SyqNnxDb8ZNdx0xhOrVGlQ7oneM4TVzt1KjiCJSVkgbvtn1Tdz9ggOLN6k0kUgmm/waxw6wDQZwxk=@gmail.com
+X-Received: by 2002:a05:690e:14c9:b0:644:60d9:752b with SMTP id 956f58d0204a3-64970da12cbmr4411500d50.93.1769477722151;
+        Mon, 26 Jan 2026 17:35:22 -0800 (PST)
+ARC-Seal: i=2; a=rsa-sha256; t=1769477722; cv=pass;
+        d=google.com; s=arc-20240605;
+        b=JSLVuBBa5QcYDkBqh5cud/QAe0WhBMxUQdmEag+Nqaipxd4Rwxfj/lb7lpfUnUfVJs
+         cHkyHsTpHQ1q4/SdEaFRkVxOfZBi81n+PGSjf/A9JxWj4qLv+GIbVJbfH9s41Yx99EHV
+         mCJnelJGFDTTQwBXrcYQBpGrCUo9IvyZSwLhY+eiDasoxaA3qwdcNT7Nv8Mnac9k+eqK
+         /JmDrQCxgz7qCsHN51god7FUQVeJ+2ls3VcKj0DZ3CGseC0FEIvFn06oe7S0qTV4NhOh
+         RS8nEvLWdXVsq6MFO89eK4rCQb04woaKkS0/W0wRuTVBbyQfUrVIQNu5+2cTd6tWMoNu
+         CThA==
+ARC-Message-Signature: i=2; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=mime-version:msip_labels:content-language:accept-language
+         :message-id:date:thread-index:thread-topic:subject:to:from
+         :dkim-signature;
+        bh=P1z80OW0+zmCZgKkyz1ZG0D7BQZaW/A5t297krm2ArA=;
+        fh=UzDjLXyd4NrWVovpYkMsBN8VcAwRH8Ae7AK4Wejnb38=;
+        b=Peag63G7F+X/NxsTaUx64YQiEk2ta4SOFj+jrm1sJCQde/ggdip//WgW4kfrDnyfe3
+         bk4HAtR7uXb61Ld38xIJI8HjsO8pr1ZMvzQVntLsN/ZKcpCeknUO4Qqx5ItfaMuIc6Py
+         AX/elu9FWEb2zmBigWPkQ1FHkf8qR6Ai8kpSAhzjLE6ZUuDlSjLbMyGNoUMvuegLJGdm
+         h7iXaO2j2j46veWGbzKbBLjyQB4Ry3lBV8qHlSXeueF5HUMO/rRudpQhCbIQXkGquWXv
+         cUE7DHHtKi0ClF/NQzK5NVV4qnVnjEwPVSpSSarkS8Rs30r9XisFidlNCwSpRUCvvvyY
+         wk4A==;
+        dara=google.com
+ARC-Authentication-Results: i=2; mx.google.com;
+       dkim=pass header.i=@outlook.com header.s=selector1 header.b=i4olOMwb;
+       arc=pass (i=1);
+       spf=pass (google.com: domain of root@test.com designates 2a01:111:f403:d405::2 as permitted sender) smtp.mailfrom=root@test.com;
+       dmarc=pass (p=NONE sp=QUARANTINE dis=NONE) header.from=outlook.com
+Return-Path: <root@test.com>
+Received: from TYPPR03CU001.outbound.protection.outlook.com (mail-japaneastazolkn190120002.outbound.protection.outlook.com. [2a01:111:f403:d405::2])
+        by mx.google.com with ESMTPS id 956f58d0204a3-6495d0822d8si9185554d50.309.2026.01.26.17.35.21
+        for <original@source.com>
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 26 Jan 2026 17:35:22 -0800 (PST)
+Received-SPF: pass (google.com: domain of root@test.com designates 2a01:111:f403:d405::2 as permitted sender) client-ip=2a01:111:f403:d405::2;
+Authentication-Results: mx.google.com;
+       dkim=pass header.i=@outlook.com header.s=selector1 header.b=i4olOMwb;
+       arc=pass (i=1);
+       spf=pass (google.com: domain of root@test.com designates 2a01:111:f403:d405::2 as permitted sender) smtp.mailfrom=root@test.com;
+       dmarc=pass (p=NONE sp=QUARANTINE dis=NONE) header.from=outlook.com
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=xE4n1fVKVDRrfzuy0MpBQwagGj2Kouu6UklaKEAT8ECMynioDKnjCmYocCVUFdS1vF9x/2SptoPR2tx01QSLW7u4olHGjmYK7vHaL3cS+mvFRJWs5vi6HiMY0P+n9VmTPjXhhP5US6uVsXp25xsmZPRPLo3plMExVy55fZHSnN/32F/g1vIZKjyoZvliuTaPs2Ut5WDZxkEupkUCT2gU/nl+lGgpENVF3o18CEiR4yvA4hro1ynXzOWUWSePhhigZWvEhiCc51t7bGAyyy/ysHXoTGhoh+aH16PFSuxnmcqIqVcbJ0Va7svirmwcGCIJBvpPKKme+wmyW7sefwOLYQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=P1z80OW0+zmCZgKkyz1ZG0D7BQZaW/A5t297krm2ArA=;
+ b=B0HMK/REuuTIx7EIwjcVHnyQRBe3qLJIUGP+HdeORcSHZfHHSgEC9betEeiflksg43Tfvb6kh01KF3F0tCDWdcYxq07fZmB7n5TX7f6HUyGCHawJwCKdR7MVAPwH5rLhHh2T/yfeStCzHC1Z6YcAB7tzyEqHLtgB2deO6n5TLH3ChG5Hu/G/Kr9y3t/inNJ5Ccej+8s4UerRMgKXrJVXcEf6mJdoZNRB4G76Q0ZeCcaUOYX+KlmP/nLXo3NiIP6iIYsxLVR5acqusPmYy9/ITK8wvpwrpwlpU0HMFa1z0y6M/QX/9s8R5O2jIzQgKLUMfu8g5kiB7jyV4qz7uNHayw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
+ dkim=none; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=outlook.com;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=P1z80OW0+zmCZgKkyz1ZG0D7BQZaW/A5t297krm2ArA=;
+ b=i4olOMwbW5bIFzclxdGaLErcXw3SwrUePDDUdfYtdvrSgYD/1knKINgwmCXymop3jLKj3Mq+8pZgZffRGxNqKQevUXSuYUvb9CfpKDOiDNIQl0k9byG+B8OdkUayK/AnXq002Y1PuxMHHBYVCsScR5G4jeFFuvFhRRs6cENdoE9YnhXgrhSmvpHwPfQH31LizXuD80xwAXhIjiK4dP1nyR8dMAYBKHPRyHDlUvE+lFCqWdRxU7PwPFVJSB/X0XDASkjx7/sw08L2g6HU7X1JgjiE8eFzYJMSdcSOEHBhZhvmTGXLpcKMnhhKXY8Jvqv2F7Euj+amlcoqCdS+KvkhFg==
+Received: from PSAPR06MB4007.apcprd06.prod.outlook.com (2603:1096:301:3d::7)
+ by SE1PPF3859F7047.apcprd06.prod.outlook.com (2603:1096:108:1::40f) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9520.5; Tue, 27 Jan
+ 2026 01:35:18 +0000
+Received: from PSAPR06MB4007.apcprd06.prod.outlook.com
+ ([fe80::5967:9f70:65c4:48b]) by PSAPR06MB4007.apcprd06.prod.outlook.com
+ ([fe80::5967:9f70:65c4:48b%5]) with mapi id 15.20.9542.010; Tue, 27 Jan 2026
+ 01:35:18 +0000
+From: flo mez <root@test.com>
+To: Florian M. <inter-1@provider.com>, Flo M. <original@source.com>
+Subject: RE: Tr: Fwd: on va tester les forward avec contenu
+Thread-Topic: Tr: Fwd: on va tester les forward avec contenu
+Thread-Index: AQHcjy0vpuqOfDGEO0agC2ocFWJZaw==
+Date: Tue, 27 Jan 2026 01:35:18 +0000
+Message-ID:
+ <PSAPR06MB4007CBF69BCF98EEE3B726E79C90A@PSAPR06MB4007.apcprd06.prod.outlook.com>
+Accept-Language: fr-FR, en-US
+Content-Language: fr-FR
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+msip_labels:
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: PSAPR06MB4007:EE_|SE1PPF3859F7047:EE_
+x-ms-office365-filtering-correlation-id: 8d9b37d3-9418-4e2b-721c-08de5d445456
+x-ms-exchange-slblob-mailprops:
+ 7qh87CJt6y2KqegnoS4V+KljWAyhwvUzKyzdGEcddRtS1tEuVlpKkZSt3rK8ZseegN2COkU/8PyJKGjMhUvABEYQeXMA52CpQKaghE8Rl1cmnLBOodjFy5qmFNhBu34pBOAyufDBb5xxscy9LN0fdNdZsQutyud0+0BgHaku8dl8N7UE+o7KXVj3fVHKvJYVw6GCcS9fg1ejHQlfPZGRRaSIYuU3lRWwAA/Unf4uGm2inbAhp0LVyHlWJOFhV4J7yoPlsL48cNsvyrqS31St3UxY2BI52+jVP/XXxHb8XJ1q0yyPUQtZ2pRnqcXLH87alIcUzYfVXrbGIObLUwoxdo5932D1oRkQtznSGE5/2NfaPW0+SjoH9v+kBVDQ5uDLMpbYRTubPseVfvpCVRisFVES5rzQ5D09oMZHwFwFOcQI8kLncEpFt7odcsyczQ6sHBpwM4DI2udnjMSui81VALO13Jm0cHMXgsvxmWbjP9ptm30NaWoGJTYa05PpuVtOL35p7nHXQSzawYfSB17/+lluo5twGDLdOdOi0vyXCupR9XN/F9YijxTND3Yw6UewHZTWn0rt3ZlvzXdz4cKmNxSzq8mP9YS1YMIxdAEC0cN0JLbs7+LCWlIrQTeZtk/vdoUh03dyS/hh1PtYQAYKD5zhiKDP0cFrHC2us0/WFsfv7mp2GbfuFKazyPWrjpVXwbntBjIkCXsfqST8GboL7CsL9uX6DZyI9qXPl1SOIgOmMCbtM6IM/ep1nKlDD/Hz
+x-microsoft-antispam:
+ BCL:0;ARA:14566002|12050799012|461199028|31061999003|7071999006|5062599005|55001999003|19110799012|8060799015|20031999003|15030799006|8062599012|39105399006|15080799012|440099028|3412199025|40105399003|102099032|3430499032;
+x-microsoft-antispam-message-info:
+ =?iso-8859-1?Q?BSbEMpIYjR3a91sUR5UKEY51UAbI13g7Ie55tkOEXYHhhMoFxHrCo6KI97?=
+ =?iso-8859-1?Q?Oy6bkXSl/oIxVj2vMH8BNLrSbm44fOgHVz6Lh56hqgE9Olo1RPJP8HfQzv?=
+ =?iso-8859-1?Q?lGfM2wJU1u3RKETFsxLMGCK2vAiOb5bbMokng//wzjGuc5C7pKScdZ250W?=
+ =?iso-8859-1?Q?jSIB5OKuXyK9GHwL3JrkldPnM7YjA5H4ESNiLg5JH1dj5Lb4ULBTXDs3lB?=
+ =?iso-8859-1?Q?KVKDW98pSZ0l5LuHfqvrgHmascGSCrQuFv8pUD9lX38rYgokRq+b3eyoAs?=
+ =?iso-8859-1?Q?WclkzzUaatnhH6LvFCHdZuiOs7We00EHmLIhQxsmG7No8321TG2WOe3Rmd?=
+ =?iso-8859-1?Q?o2v1mVuV88eGM45c6IyZBwOqBJ/WEPmbjv7VW6VLySRP/rcG+izjrt8XNH?=
+ =?iso-8859-1?Q?XHWw/r1uUvjjrYZRQYwWqww/RPY5kyT7yo24tcAdqAHGxbdXEY1p6lJm7B?=
+ =?iso-8859-1?Q?GexfSLvzT9or+pCwRwZesYMAEC4lPAS/ErCGvS6ER+r2g7Tp8sFyMAo32X?=
+ =?iso-8859-1?Q?zQZlmTsdTJlqJhX2hqI1lGAyNSjO4+iZ3/7Vn83B9Lf7O5FdPBbFlxFCww?=
+ =?iso-8859-1?Q?YiVfuSSMXEPHw/5ihZrCoodJocG9TsWvSJ/HuoCCbCUXWEQ8rBhykV6pIl?=
+ =?iso-8859-1?Q?sy24Twq8+V97/Ef9OQWbGnMhmYZ7cYw483o1zcwxK5s5ZzDJLWAOjjgYFv?=
+ =?iso-8859-1?Q?IRIhEqdDaltUM2Ht5uRtLWzzyOuOVQfQmkagCT2ieYK9wuinCaTI0e+5Yx?=
+ =?iso-8859-1?Q?pfFloX4i+rkZXKm6GPvV/XU+6xGMwCtl/55y/AerRbfdREpmtyD71YJffl?=
+ =?iso-8859-1?Q?Dswc4PFlqNvmffzvFkN4gU0U7q1SN6GpwaOz8urqSaMDlwUg3wfZADUWT7?=
+ =?iso-8859-1?Q?+weq/N4ERaMMgUOVODRnMvmnD9/aDdn8Q0Ffn1onwTcvPW9hTc/wVeBJC1?=
+ =?iso-8859-1?Q?IeaaIlaBvheAcS2lLY75jNwrXAG4FYreOaNNoVnDXHPcCnXMbBhBYTLim6?=
+ =?iso-8859-1?Q?7iDeJaZarS5pImgrQJudKc5rJSpnG/2MTzRbwrhkTKelrPTM3o7UrlymJ4?=
+ =?iso-8859-1?Q?Z9c6So7FNtkaOYV5K3KxxWb81a3UXwBycZ9dz4pDf/+WhZtINv/o3DxqKE?=
+ =?iso-8859-1?Q?v/o3IAptSrTnUp0148SC/rq3PYesLBWbOu/Chb4PzyuaU+5i7wlP0K993s?=
+ =?iso-8859-1?Q?25ajHG6Y8jQ7rHKfLoCbJqDVBElmiLhswL0UcQIDrUwbcgT2Cd0HYJCd7x?=
+ =?iso-8859-1?Q?jk9zXsbwEpVnsTSh5e0gsa+05Y90gQYKVrInVBdvs84GXgoKubmeHpmR2p?=
+ =?iso-8859-1?Q?JtSGESZFB5/6Ss2euCfjTDOI1fl+aB7jgGAjZzTquPENGZcXj3r3J8OeBF?=
+ =?iso-8859-1?Q?sL1E0tsUgYOCzObnQ7vIWasp05FfksDS9yyamZrjLeINd3A2TOMj0=3D?=
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0:
+ =?iso-8859-1?Q?V1Y7QNM78EEZg54MfLp30IRFkkaZ2H9z9i7zRizKyUwucEX3Wpb4Wjo/fD?=
+ =?iso-8859-1?Q?Ldjw66L+x31cOzhWAXAO2MN7JBMyjvpVolqOK21mX+Lnl7p+fEzl/ac4nu?=
+ =?iso-8859-1?Q?lH20s69Aw8X2fJ2QNiJzzyRUBKK70xy+ubtVly3Bp6lb7awcQQ2/DKMAvl?=
+ =?iso-8859-1?Q?A9sNCH7GLQbEy0aE44PPb5tfSwT+9jH/4Tnr6I4TPaR5my80hfkxDORtci?=
+ =?iso-8859-1?Q?jOSJ9038bWSRTGmDEVQq+dlWS3DX3OtoR/CYCQt3izmkeYVhIpAZO24+w7?=
+ =?iso-8859-1?Q?JlEXgG1eJpFIVZHFK/oLmCSCCegM3eisXHox8ovi4cGingv7WDtNBkm8Dq?=
+ =?iso-8859-1?Q?ulYtdDQa4VjbYLKKK+aUdc3cfjSUtLuZnN4fOjq3gdYFW6AXvNE/rzlKnS?=
+ =?iso-8859-1?Q?C9mjlc95ElY9fqfRMulGJN6auDm7OyAbfoTaSc/IbFwHFnW6wHInsIcSHL?=
+ =?iso-8859-1?Q?OSMU0Ok7pubvKWfgPbBiBgzjz0kVQQrzpQ3FehSI1V9XKcq/5oltC+MsGv?=
+ =?iso-8859-1?Q?TLwXJvSRzyvWXAlxevFujdqgxHtrYmpjQVEWHW8jkW5ApkB4RCCskJsfgN?=
+ =?iso-8859-1?Q?yjtyZogkS3w1QCd6NOy4poIkPwQ8qppGMeHxzBFYshipRQOyfWuBn66WL6?=
+ =?iso-8859-1?Q?FtlSKUuSF3IvqKAzFqF9H6GvbzR7I/62H50CneBO4a5phe9I3JFNszNUwf?=
+ =?iso-8859-1?Q?vfCnbeO+ZWI+zoufwTlxFRsAPGGoQ9POcolO8XDvVOswzWQ09rVVsCaChd?=
+ =?iso-8859-1?Q?MxD3eNrahxL4IFooPbKqyPl7H7Mtw14hhV6mB8XoJ7bh+wIaAa9Tz7XIRC?=
+ =?iso-8859-1?Q?R4KIW+/M/j+QfyhL4z0pntigSlVCIl3byQ5uX/PMoYUDwlj2jDL0mZMWog?=
+ =?iso-8859-1?Q?rxXwiwJYGZeRo3xE79DACrss0Hhc4VC+2k5WhkAZD17JD6Mnc98Ak3Jj25?=
+ =?iso-8859-1?Q?5J9myQ+IQXoKsYWC53D+9ILhdBGtFqlUaLVjAy140ipwiEutlA8M5WWrrd?=
+ =?iso-8859-1?Q?2ET20z5vNOImapYZi9agQNPIkzx06blqG42FbX+kBXkY7aUnOoNEo/mEc7?=
+ =?iso-8859-1?Q?fvrI7Xu31ixEfqczYHqpyuhAkPb9/Pna59p/YK3BZCz9B3F/6gOQw34zaW?=
+ =?iso-8859-1?Q?BilqErFgE71w+amBixQuolrop27Z2in2W9lnnhPOs7PbWoaCaJc6FQg2Na?=
+ =?iso-8859-1?Q?VNGHUxY+kVayHSlvRZGirSTNB89g01LRUR7aqZAIvE5jNagXJceJsEd5OS?=
+ =?iso-8859-1?Q?DI0yDQ6SWeTg5/npB/sa2j1ZHE9q7bAsMx5obcYcwQy4K0G4Geuidq3XfQ?=
+ =?iso-8859-1?Q?oaPEpBsZkA7yIkbGveosH1nqLbzGQC96UDgVr+pEDQnSmnGdh4+tcsvky8?=
+ =?iso-8859-1?Q?En/WE2BNXhVPF4hvH+BfQy0AFDuIUqPD1vwYEVL3cDEq3ajNPZ+aaeNF1C?=
+ =?iso-8859-1?Q?N2B5RayY4Cw3KyQrhaS1d2Vxy8uda1jO+XR9MF61znQu9AhE1bYDu7gIK9?=
+ =?iso-8859-1?Q?U=3D?=
+Content-Type: multipart/alternative;
+	boundary="_000_PSAPR06MB4007CBF69BCF98EEE3B726E79C90APSAPR06MB4007apcp_"
+MIME-Version: 1.0
+X-OriginatorOrg: outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: PSAPR06MB4007.apcprd06.prod.outlook.com
+X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg: 00000000-0000-0000-0000-000000000000
+X-MS-Exchange-CrossTenant-Network-Message-Id: 8d9b37d3-9418-4e2b-721c-08de5d445456
+X-MS-Exchange-CrossTenant-originalarrivaltime: 27 Jan 2026 01:35:18.6305
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
+X-MS-Exchange-CrossTenant-rms-persistedconsumerorg: 00000000-0000-0000-0000-000000000000
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SE1PPF3859F7047
+
+--_000_PSAPR06MB4007CBF69BCF98EEE3B726E79C90APSAPR06MB4007apcp_
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+
+Dernier message du moment
+
+________________________________
+De: Florian M.
+Envoy=E9:
+=C0: Flo M.
+Objet: RE: Tr: Fwd: on va tester les forward avec contenu
+
+Mais cest bien normal !
+
+
+Envoy=E9: mardi 27 janvier 2026 =E0 00:30
+De: "Original Sender" <original@source.com>
+=C0: "Recip" <inter-1@provider.com>
+Objet: Fwd: on va tester les forward avec contenu
+Genial Yodjii je te remerci
+
+Florian
+
+---------- Forwarded message ---------
+From: Florian M. <inter-1@provider.com<mailto:inter-1@provider.com>>
+Date: Tue, 27 Jan 2026 at 00:29
+Subject: Tr: on va tester les forward avec contenu
+To: Flo M. <original@source.com<mailto:original@source.com>>
+
+Ok c'est not=E9 thibaut je vais regarde, je te le retransfere
+
+Yodjio
+
+
+Envoy=E9: mardi 27 janvier 2026 =E0 00:28
+De: "Original Sender" <original@source.com<mailto:original@source.com>>
+=C0: "Recip" <inter-1@provider.com<mailto:inter-1@provider.com>>
+Objet: on va tester les forward avec contenu
+Hello. tu me foward ca en retour il y aune pj merci
+
+--_000_PSAPR06MB4007CBF69BCF98EEE3B726E79C90APSAPR06MB4007apcp_
+Content-Type: text/html; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+
+<html>
+<head>
+<meta http-equiv=3D"Content-Type" content=3D"text/html; charset=3Diso-8859-=
+1">
+<style type=3D"text/css" style=3D"display:none;"> P {margin-top:0;margin-bo=
+ttom:0;} </style>
+</head>
+<body dir=3D"ltr">
+<div style=3D"font-family: Aptos, Aptos_EmbeddedFont, Aptos_MSFontService, =
+Calibri, Helvetica, sans-serif; font-size: 12pt; color: rgb(0, 0, 0);">
+Dernier message du moment</div>
+<div style=3D"font-family: Calibri, Arial, Helvetica, sans-serif; font-size=
+: 12pt; color: rgb(0, 0, 0);">
+<br>
+</div>
+<hr style=3D"display: inline-block; width: 98%;">
+<div style=3D"font-family: Calibri, Arial, Helvetica, sans-serif; font-size=
+: 12pt; color: rgb(0, 0, 0);">
+<b>De:</b>&nbsp;Florian M.<br>
+<b>Envoy=E9:</b><br>
+<b>=C0:</b>&nbsp;Flo M.<br>
+<b>Objet:</b>&nbsp;RE: Tr: Fwd: on va tester les forward avec contenu </div=
+>
+<div style=3D"font-family: Calibri, Arial, Helvetica, sans-serif; font-size=
+: 12pt; color: rgb(0, 0, 0);">
+<br>
+</div>
+<div style=3D"font-family: Verdana; font-size: 12px;">Mais cest bien normal=
+ !</div>
+<div style=3D"font-family: Verdana; font-size: 12px;">&nbsp; </div>
+<div style=3D"font-family: Verdana; font-size: 12px;">&nbsp; </div>
+<div style=3D"margin: 10px 5px 5px 10px; padding-top: 10px; padding-bottom:=
+ 10px; padding-left: 10px; border-left: 2px solid rgb(195, 217, 229);">
+<div style=3D"margin: 0px 0px 10px; font-family: Verdana; font-size: 12px;"=
+><b>Envoy=E9:</b>&nbsp;mardi 27 janvier 2026 =E0 00:30<br>
+<b>De:</b>&nbsp;&quot;Flo M.&quot; &lt;original@source.com&gt;<br>
+<b>=C0:</b>&nbsp;&quot;Flo!&quot; &lt;inter-1@provider.com&gt;<br>
+<b>Objet:</b>&nbsp;Fwd: on va tester les forward avec contenu</div>
+<div style=3D"font-family: Verdana; font-size: 12px;">Genial Yodjii&nbsp;je=
+ te remerci<br>
+<br>
+Florian<br>
+&nbsp; </div>
+<div style=3D"font-family: Verdana; font-size: 12px;">---------- Forwarded =
+message ---------<br>
+From: <b>Florian M.</b>&nbsp;&lt;<a class=3D"OWAAutoLink" id=3D"OWA5d10b333=
+-e512-a0da-1fa5-fc849704297f" target=3D"_blank" href=3D"mailto:yodjii@mail.=
+com">inter-1@provider.com</a>&gt;<br>
+Date: Tue, 27 Jan 2026 at 00:29<br>
+Subject: Tr: on va tester les forward avec contenu<br>
+To: Flo M. &lt;<a class=3D"OWAAutoLink" id=3D"OWAb60349cc-a9e4-b56d-2818-3d=
+6a59e834cd" target=3D"_blank" href=3D"mailto:original@source.com">floria=
+n.mezy@gmail.com</a>&gt;</div>
+<div style=3D"font-family: Verdana; font-size: 12px;">&nbsp; </div>
+<div style=3D"font-family: Verdana; font-size: 12px;">Ok c'est not=E9 thiba=
+ut je vais regarde, je te le retransfere</div>
+<div style=3D"font-family: Verdana; font-size: 12px;">&nbsp;</div>
+<div style=3D"font-family: Verdana; font-size: 12px;">Yodjio</div>
+<div style=3D"font-family: Verdana; font-size: 12px;">&nbsp; </div>
+<div style=3D"font-family: Verdana; font-size: 12px;">&nbsp; </div>
+<div style=3D"margin: 10px 5px 5px 10px; padding-top: 10px; padding-bottom:=
+ 10px; padding-left: 10px; border-left: 2px solid rgb(195, 217, 229);">
+<div style=3D"margin: 0px 0px 10px; font-family: Verdana; font-size: 12px;"=
+><b>Envoy=E9:</b>&nbsp;mardi 27 janvier 2026 =E0 00:28<br>
+<b>De:</b>&nbsp;&quot;Flo M.&quot; &lt;<a class=3D"OWAAutoLink" id=3D"OWA76=
+24c3e5-6c9e-f037-2741-63fd03a47b56" target=3D"_blank" href=3D"mailto:floria=
+n.mezy@gmail.com">original@source.com</a>&gt;<br>
+<b>=C0:</b>&nbsp;&quot;Flo!&quot; &lt;<a class=3D"OWAAutoLink" id=3D"OWA310=
+1f011-9d29-b7a6-ca17-883c1711b463" target=3D"_blank" href=3D"mailto:yodjii@=
+mail.com">inter-1@provider.com</a>&gt;<br>
+<b>Objet:</b>&nbsp;on va tester les forward avec contenu</div>
+<div style=3D"font-family: Verdana; font-size: 12px;">Hello. tu me foward&n=
+bsp;ca en&nbsp;retour il y aune pj merci</div>
+</div>
+</div>
+</body>
+</html>
+
+--_000_PSAPR06MB4007CBF69BCF98EEE3B726E79C90APSAPR06MB4007apcp_--
