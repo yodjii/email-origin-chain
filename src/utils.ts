@@ -4,6 +4,7 @@ import * as anyDateParser from 'any-date-parser';
 
 export function normalizeDateToISO(dateRaw: string | Date | null | undefined): string | null {
     if (!dateRaw) return null;
+    console.log(`normalizeDateToISO input: "${dateRaw}"`); // DEBUG
 
     if (dateRaw instanceof Date) {
         return dateRaw.toISOString();
@@ -28,12 +29,31 @@ export function normalizeDateToISO(dateRaw: string | Date | null | undefined): s
     }
 
     // 3. Robust cleaning fallback (remove French/English days, "at", "à", etc.)
-    const cleaned = dateStr
-        .replace(/\b(lun\.?|mar\.?|mer\.?|mer\.?|jeu\.?|ven\.?|sam\.?|dim\.?|mon\.?|tue\.?|wed\.?|thu\.?|fri\.?|sat\.?|sun\.?)\b/gi, '')
+    // 3. Robust cleaning fallback (remove French/English days, "at", "à", etc.)
+    let cleaned = dateStr
+        .replace(/\b(lun\.?|mar\.?|mer\.?|jeu\.?|ven\.?|sam\.?|dim\.?|mon\.?|tue\.?|wed\.?|thu\.?|fri\.?|sat\.?|sun\.?)\b/gi, '')
         .replace(/\bà\b/gi, '')
         .replace(/\bat\b/gi, '')
         .replace(/,/g, ' ')
-        .replace(/\s+/g, ' ')
+        .replace(/\s+/g, ' ');
+
+    // Normalize French months
+    cleaned = cleaned
+        .replace(/\bjanv\.?\b/gi, 'Jan')
+        .replace(/\bfévr\.?\b/gi, 'Feb')
+        .replace(/\bmars\b/gi, 'Mar')
+        .replace(/\bavr\.?\b/gi, 'Apr')
+        .replace(/\bmai\b/gi, 'May')
+        .replace(/\bjuin\b/gi, 'Jun')
+        .replace(/\bjuil\.?\b/gi, 'Jul')
+        .replace(/\baoût\b/gi, 'Aug')
+        .replace(/\bsept\.?\b/gi, 'Sep')
+        .replace(/\boct\.?\b/gi, 'Oct')
+        .replace(/\bnov\.?\b/gi, 'Nov')
+        .replace(/\bdéc\.?\b/gi, 'Dec')
+        .replace(/\bfevr\.?\b/gi, 'Feb') // Tolerance for missing accent
+        .replace(/\baout\b/gi, 'Aug')
+        .replace(/\bdec\.?\b/gi, 'Dec')
         .trim();
 
     // Retry native Date on cleaned string
@@ -59,6 +79,112 @@ export function cleanText(text: string | null | undefined): string | null {
         .replace(/\r\n/g, '\n')
         .replace(/[ \t]+$/gm, '') // trim end of lines
         .trim();
+}
+
+/**
+ * Normalizes EmailAddress to fix edge cases like "email [email]" pattern
+ * 
+ * Issue: Some email clients (Gmail, Outlook) produce formats like:
+ *   "john.doe@example.com [john.doe@example.com]"
+ * 
+ * email-forward-parser may parse this as:
+ *   { name: "john.doe@example.com [john.doe@example.com]", address: "" }
+ * 
+ * This function detects and fixes this pattern to:
+ *   { name: null, address: "john.doe@example.com" }
+ */
+export function normalizeFrom(from: EmailAddress | null | undefined): EmailAddress | null {
+    if (!from) return null;
+
+    // PREPROCESSING: Strip all <mailto:...> patterns and extra > characters
+    // This handles cases like: "Name" <email<mailto:email>> or email<mailto:email>>
+    let cleanedAddress = from.address;
+    if (cleanedAddress) {
+        // Remove all <mailto:...> occurrences
+        cleanedAddress = cleanedAddress.replace(/<mailto:[^>]+>/g, '');
+
+        // Count < and > to remove extras
+        const openCount = (cleanedAddress.match(/</g) || []).length;
+        const closeCount = (cleanedAddress.match(/>/g) || []).length;
+
+        // Remove excess > from the end
+        if (closeCount > openCount) {
+            const excess = closeCount - openCount;
+            for (let i = 0; i < excess; i++) {
+                cleanedAddress = cleanedAddress.replace(/>$/, '');
+            }
+        }
+
+        cleanedAddress = cleanedAddress.trim();
+    }
+
+    // 1. Clean up "address" field if it contains weird patterns
+    if (cleanedAddress) {
+        // Fix "Name" <email> or Name <email> pattern in address field (should be in name field)
+        const nameEmailMatch = cleanedAddress.match(/^(?:"([^"]+)"|([^<]+?))\s*<([^>]+)>$/);
+        if (nameEmailMatch) {
+            const extractedName = nameEmailMatch[1] || nameEmailMatch[2];
+            const extractedEmail = nameEmailMatch[3];
+            if (/^[^\s@]+@[^\s@]+\.[^\s@,]+$/.test(extractedEmail)) {
+                return {
+                    name: extractedName?.trim() || from.name,
+                    address: extractedEmail.trim()
+                };
+            }
+        }
+
+        // Fix "email [email]" pattern
+        if (cleanedAddress.includes('[')) {
+            const match = cleanedAddress.match(/^([^\s@]+@[^\s@]+\.[^\s@,]+)\s*\[([^\]]+)\]$/);
+            if (match && match[1] === match[2]) {
+                return {
+                    name: from.name,
+                    address: match[1]
+                };
+            }
+        }
+
+        // If cleaned address is a simple valid email, use it
+        if (/^[^\s@]+@[^\s@]+\.[^\s@,]+$/.test(cleanedAddress)) {
+            return {
+                name: from.name,
+                address: cleanedAddress
+            };
+        }
+    }
+
+    // 2. If address is empty but name contains a pattern "email [email]"
+    if (!from.address && from.name) {
+        const match = from.name.match(/^([^\s@]+@[^\s@]+\.[^\s@,]+)\s*\[([^\]]+)\]$/);
+
+        if (match && match[1] === match[2]) {
+            // Pattern "email [email]" detected with identical emails → extract the email
+            return {
+                name: undefined,
+                address: match[1]
+            };
+        }
+
+        // Try to extract any email from name if it contains one
+        const emailMatch = from.name.match(/([^\s@]+@[^\s@]+\.[^\s@,]+)/);
+        if (emailMatch) {
+            return {
+                name: undefined,
+                address: emailMatch[1]
+            };
+        }
+    }
+
+    // 3. FINAL POLISH: Strip any leftover bold/italic markers (* or _) from name and address
+    if (from.name) {
+        from.name = from.name.replace(/^[\*\_]+|[\*\_]+$/g, '').trim();
+    }
+    if (from.address) {
+        // Address should already be clean, but just in case
+        from.address = from.address.replace(/^[\*\_]+|[\*\_]+$/g, '').trim();
+    }
+
+    return from;
 }
 
 export function normalizeParserResult(

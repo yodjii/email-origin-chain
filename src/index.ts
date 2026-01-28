@@ -1,29 +1,33 @@
 import { processMime } from './mime-layer';
 import { processInline } from './inline-layer';
 import { Options, ResultObject, Attachment } from './types';
-import { normalizeDateToISO, cleanText } from './utils';
+import { normalizeDateToISO, cleanText, normalizeFrom } from './utils';
 
 /**
  * Main entry point: Extract the deepest forwarded email using hybrid strategy
  */
-export async function extractDeepestHybrid(
-    raw: string,
-    options: Options = {}
-): Promise<ResultObject> {
+export async function extractDeepestHybrid(raw: string, options?: Options): Promise<ResultObject> {
     // Validation
     if (typeof raw !== 'string') {
         throw new Error('Input must be a string');
     }
 
-    const opts: Required<Options> = {
-        maxDepth: options.maxDepth ?? 5,
-        timeoutMs: options.timeoutMs ?? 5000
+    const opts = {
+        maxDepth: options?.maxDepth ?? 5,
+        timeoutMs: options?.timeoutMs ?? 5000,
+        skipMimeLayer: options?.skipMimeLayer ?? false,
+        customDetectors: options?.customDetectors ?? []
     };
 
     const warnings: string[] = [];
 
+    // If skipMimeLayer is true, parse only inline forwards (text-only mode)
+    if (opts.skipMimeLayer) {
+        return await processInline(raw, 0, [], opts.customDetectors);
+    }
+
     try {
-        // Step 1: MIME Layer - Descend through message/rfc822 attachments
+        // Step 1: MIME Layer
         let timer: NodeJS.Timeout | undefined;
         const mimeResult = await Promise.race([
             processMime(raw, opts),
@@ -34,13 +38,11 @@ export async function extractDeepestHybrid(
             if (timer) clearTimeout(timer);
         });
 
-        // Step 2: Inline Layer - Parse the deepest body for inline forwards
-        // Now passing history from previous layer
-        const inlineResult = await processInline(mimeResult.rawBody, mimeResult.depth, mimeResult.history);
+        // Step 2: Inline Layer
+        const inlineResult = await processInline(mimeResult.rawBody, mimeResult.depth, mimeResult.history, opts.customDetectors);
 
-        // Step 3: Align results - if inlineResult is a fallback, 
-        // prefer the structured metadata from the MIME layer if available.
-        let from = inlineResult.from;
+        // Step 3: Align results
+        let from = normalizeFrom(inlineResult.from);
         let subject = inlineResult.subject;
         let date_raw = inlineResult.date_raw;
         let date_iso = inlineResult.date_iso;
@@ -49,21 +51,21 @@ export async function extractDeepestHybrid(
         if (inlineResult.diagnostics.method === 'fallback' && mimeResult.metadata) {
             const m = mimeResult.metadata;
             if (!from && m.from?.value?.[0]) {
-                from = { name: m.from.value[0].name, address: m.from.value[0].address };
+                from = normalizeFrom({ name: m.from.value[0].name, address: m.from.value[0].address });
             }
             if (!subject && m.subject) subject = m.subject;
             if (!date_iso && m.date) date_iso = m.date.toISOString();
             if (!date_raw && m.date) date_raw = m.date.toString();
-            if (!text) text = mimeResult.rawBody; // Keep body from MIME if inline found nothing
+            if (!text) text = mimeResult.rawBody;
         }
 
-        // Align the root entry of history if it was missing 'from' info (often the case for root)
+        // Align the root entry of history
         if (inlineResult.history.length > 0) {
             const rootInHistory = inlineResult.history[inlineResult.history.length - 1];
             if (!rootInHistory.from && mimeResult.metadata) {
                 const m = mimeResult.metadata;
                 if (m.from?.value?.[0]) {
-                    rootInHistory.from = { name: m.from.value[0].name, address: m.from.value[0].address };
+                    rootInHistory.from = normalizeFrom({ name: m.from.value[0].name, address: m.from.value[0].address });
                 }
                 if (m.subject) rootInHistory.subject = m.subject;
             }
@@ -76,15 +78,14 @@ export async function extractDeepestHybrid(
             size: att.size || 0
         }));
 
-        // Normalize date if not already done
         date_iso = date_iso || normalizeDateToISO(date_raw);
 
-        if (!date_iso && date_raw) {
-            inlineResult.diagnostics.warnings.push(`Could not normalize date: "${date_raw}"`);
-        }
+        // Destructure to exclude 'from' since we have our own normalized version
+        const { from: _unusedFrom, ...restInlineResult } = inlineResult;
 
-        return {
-            ...inlineResult,
+        const result: ResultObject = {
+            ...restInlineResult,
+            // Use our normalized/enriched values
             from,
             subject,
             date_raw,
@@ -93,14 +94,16 @@ export async function extractDeepestHybrid(
             attachments: [...attachments, ...inlineResult.attachments],
             diagnostics: {
                 ...inlineResult.diagnostics,
-                // method: stays 'inline' if it found something, else 'rfc822' if MIME was successful
-                method: inlineResult.diagnostics.method === 'fallback' && mimeResult.isRfc822 ? 'rfc822' : inlineResult.diagnostics.method,
+                depth: mimeResult.depth + inlineResult.diagnostics.depth,
+                method: (inlineResult.diagnostics.method === 'fallback' && mimeResult.isRfc822) ? 'rfc822' : inlineResult.diagnostics.method,
+                parsedOk: !!(from && subject) || !!(from && inlineResult.diagnostics.method !== 'fallback'),
                 warnings: [...warnings, ...inlineResult.diagnostics.warnings]
             }
         };
 
+        return result;
+
     } catch (error) {
-        // Return a safe fallback result
         return {
             from: null,
             subject: null,
@@ -119,5 +122,4 @@ export async function extractDeepestHybrid(
     }
 }
 
-// Export types for consumers
 export * from './types';

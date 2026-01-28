@@ -1,3 +1,6 @@
+import { ForwardDetector, DetectionResult } from './detectors/types';
+export { ForwardDetector, DetectionResult };
+
 export interface EmailAddress {
     name?: string;
     address?: string;
@@ -38,7 +41,32 @@ export interface ResultObject {
     diagnostics: Diagnostics;
 }
 
+/**
+ * Options for extraction behavior
+ */
 export interface Options {
+    /**
+     * Maximum depth to descend through MIME attachments.
+     * Default: 5
+     */
     maxDepth?: number;
+
+    /**
+     * Maximum time in milliseconds to wait for MIME parsing before timeout.
+     * Default: 5000ms
+     */
     timeoutMs?: number;
+
+    /**
+     * Skip MIME layer processing and parse only inline forwards.
+     * Use this when input is plain text body (not a full email with headers).
+     * Default: false
+     */
+    skipMimeLayer?: boolean;
+
+    /**
+     * Custom forward detectors to register.
+     * These will be added to the registry and used for detection.
+     */
+    customDetectors?: ForwardDetector[];
 }

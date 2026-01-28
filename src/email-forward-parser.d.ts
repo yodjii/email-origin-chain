@@ -18,8 +18,25 @@ declare module 'email-forward-parser' {
         email?: ParsedEmail;
     }
 
+    export interface RecursiveResult {
+        forwarded: boolean;
+        history: {
+            from: { name: string | null; address: string | null };
+            date: string | null;
+            subject: string | null;
+            body: string;
+        }[];
+        deepest: {
+            from: { name: string | null; address: string | null };
+            date: string | null;
+            subject: string | null;
+            body: string;
+        } | null;
+    }
+
     export default class EmailForwardParser {
         constructor();
-        read(text: string): ParseResult;
+        read(text: string, subject?: string | null): ParseResult;
+        readRecursive(text: string, subject?: string | null, maxDepth?: number, options?: any): RecursiveResult;
     }
 }

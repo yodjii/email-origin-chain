@@ -1,5 +1,5 @@
-Delivered-To: original@source.com
-Received: by 2002:a17:907:XXXX:XX:XXX:XXXX:XXXX with SMTP id hs12csp1792386ejc;
+Delivered-To: florian.m@anonymized.com
+Received: by 2002:a17:907:3e8c:b0:b76:be28:f127 with SMTP id hs12csp1792386ejc;
         Mon, 26 Jan 2026 17:35:22 -0800 (PST)
 X-Forwarded-Encrypted: i=3; AJvYcCUKf2SyqNnxDb8ZNdx0xhOrVGlQ7oneM4TVzt1KjiCJSVkgbvtn1Tdz9ggOLN6k0kUgmm/waxw6wDQZwxk=@gmail.com
 X-Received: by 2002:a05:690e:14c9:b0:644:60d9:752b with SMTP id 956f58d0204a3-64970da12cbmr4411500d50.93.1769477722151;
@@ -28,19 +28,19 @@ ARC-Message-Signature: i=2; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc
 ARC-Authentication-Results: i=2; mx.google.com;
        dkim=pass header.i=@outlook.com header.s=selector1 header.b=i4olOMwb;
        arc=pass (i=1);
-       spf=pass (google.com: domain of root@test.com designates 2a01:111:f403:d405::2 as permitted sender) smtp.mailfrom=root@test.com;
+       spf=pass (google.com: domain of flo.b@anonymized.com designates 2a01:111:f403:d405::2 as permitted sender) smtp.mailfrom=flo.b@anonymized.com;
        dmarc=pass (p=NONE sp=QUARANTINE dis=NONE) header.from=outlook.com
-Return-Path: <root@test.com>
+Return-Path: <flo.b@anonymized.com>
 Received: from TYPPR03CU001.outbound.protection.outlook.com (mail-japaneastazolkn190120002.outbound.protection.outlook.com. [2a01:111:f403:d405::2])
         by mx.google.com with ESMTPS id 956f58d0204a3-6495d0822d8si9185554d50.309.2026.01.26.17.35.21
-        for <original@source.com>
+        for <florian.m@anonymized.com>
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
         Mon, 26 Jan 2026 17:35:22 -0800 (PST)
-Received-SPF: pass (google.com: domain of root@test.com designates 2a01:111:f403:d405::2 as permitted sender) client-ip=2a01:111:f403:d405::2;
+Received-SPF: pass (google.com: domain of flo.b@anonymized.com designates 2a01:111:f403:d405::2 as permitted sender) client-ip=2a01:111:f403:d405::2;
 Authentication-Results: mx.google.com;
        dkim=pass header.i=@outlook.com header.s=selector1 header.b=i4olOMwb;
        arc=pass (i=1);
-       spf=pass (google.com: domain of root@test.com designates 2a01:111:f403:d405::2 as permitted sender) smtp.mailfrom=root@test.com;
+       spf=pass (google.com: domain of flo.b@anonymized.com designates 2a01:111:f403:d405::2 as permitted sender) smtp.mailfrom=flo.b@anonymized.com;
        dmarc=pass (p=NONE sp=QUARANTINE dis=NONE) header.from=outlook.com
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
  b=xE4n1fVKVDRrfzuy0MpBQwagGj2Kouu6UklaKEAT8ECMynioDKnjCmYocCVUFdS1vF9x/2SptoPR2tx01QSLW7u4olHGjmYK7vHaL3cS+mvFRJWs5vi6HiMY0P+n9VmTPjXhhP5US6uVsXp25xsmZPRPLo3plMExVy55fZHSnN/32F/g1vIZKjyoZvliuTaPs2Ut5WDZxkEupkUCT2gU/nl+lGgpENVF3o18CEiR4yvA4hro1ynXzOWUWSePhhigZWvEhiCc51t7bGAyyy/ysHXoTGhoh+aH16PFSuxnmcqIqVcbJ0Va7svirmwcGCIJBvpPKKme+wmyW7sefwOLYQ==
@@ -65,8 +65,8 @@ Received: from PSAPR06MB4007.apcprd06.prod.outlook.com
  ([fe80::5967:9f70:65c4:48b]) by PSAPR06MB4007.apcprd06.prod.outlook.com
  ([fe80::5967:9f70:65c4:48b%5]) with mapi id 15.20.9542.010; Tue, 27 Jan 2026
  01:35:18 +0000
-From: flo mez <root@test.com>
-To: John Doe <inter-1@provider.com>, John D. <original@source.com>
+From: Flo Beta <flo.b@anonymized.com>
+To: Flo Alpha <yodjj@anonymized.com>, Flo Beta <florian.m@anonymized.com>
 Subject: RE: Tr: Fwd: on va tester les forward avec contenu
 Thread-Topic: Tr: Fwd: on va tester les forward avec contenu
 Thread-Index: AQHcjy0vpuqOfDGEO0agC2ocFWJZaw==
@@ -160,36 +160,36 @@ Content-Transfer-Encoding: quoted-printable
 Dernier message du moment
 
 ________________________________
-De: John Doe
+De: Flo Alpha
 Envoy=E9:
-=C0: John D.
+=C0: Flo Beta
 Objet: RE: Tr: Fwd: on va tester les forward avec contenu
 
 Mais cest bien normal !
 
 
 Envoy=E9: mardi 27 janvier 2026 =E0 00:30
-De: "Original Sender" <original@source.com>
-=C0: "Recip" <inter-1@provider.com>
+De: "Flo Beta" <florian.m@anonymized.com>
+=C0: "Flo Yodj" <yodjj@anonymized.com>
 Objet: Fwd: on va tester les forward avec contenu
-Genial jane je te remerci
+Genial Flo Yodj je te remerci
 
-John
+Flo Alpha
 
 ---------- Forwarded message ---------
-From: John Doe <inter-1@provider.com<mailto:inter-1@provider.com>>
+From: Flo Alpha <yodjj@anonymized.com<mailto:yodjj@anonymized.com>>
 Date: Tue, 27 Jan 2026 at 00:29
 Subject: Tr: on va tester les forward avec contenu
-To: John D. <original@source.com<mailto:original@source.com>>
+To: Flo Beta <florian.m@anonymized.com<mailto:florian.m@anonymized.com>>
 
-Ok c'est not=E9 thibaut je vais regarde, je te le retransfere
+Ok c'est not=E9 Pierre je vais regarde, je te le retransfere
 
-Jane
+Yodjio
 
 
 Envoy=E9: mardi 27 janvier 2026 =E0 00:28
-De: "Original Sender" <original@source.com<mailto:original@source.com>>
-=C0: "Recip" <inter-1@provider.com<mailto:inter-1@provider.com>>
+De: "Flo Beta" <florian.m@anonymized.com<mailto:florian.m@anonymized.com>>
+=C0: "Flo Yodj" <yodjj@anonymized.com<mailto:yodjj@anonymized.com>>
 Objet: on va tester les forward avec contenu
 Hello. tu me foward ca en retour il y aune pj merci
 
@@ -200,76 +200,71 @@ Content-Transfer-Encoding: quoted-printable
 <html>
 <head>
 <meta http-equiv=3D"Content-Type" content=3D"text/html; charset=3Diso-8859-=
-1">
+203: 1">
 <style type=3D"text/css" style=3D"display:none;"> P {margin-top:0;margin-bo=
-ttom:0;} </style>
+205: ttom:0;} </style>
 </head>
 <body dir=3D"ltr">
 <div style=3D"font-family: Aptos, Aptos_EmbeddedFont, Aptos_MSFontService, =
-Calibri, Helvetica, sans-serif; font-size: 12pt; color: rgb(0, 0, 0);">
+209: Calibri, Helvetica, sans-serif; font-size: 12pt; color: rgb(0, 0, 0);">
 Dernier message du moment</div>
 <div style=3D"font-family: Calibri, Arial, Helvetica, sans-serif; font-size=
-: 12pt; color: rgb(0, 0, 0);">
+212: : 12pt; color: rgb(0, 0, 0);">
 <br>
 </div>
 <hr style=3D"display: inline-block; width: 98%;">
 <div style=3D"font-family: Calibri, Arial, Helvetica, sans-serif; font-size=
-: 12pt; color: rgb(0, 0, 0);">
-<b>De:</b>&nbsp;John Doe<br>
+217: : 12pt; color: rgb(0, 0, 0);">
+<b>De:</b>&nbsp;Flo Alpha<br>
 <b>Envoy=E9:</b><br>
-<b>=C0:</b>&nbsp;John D.<br>
+<b>=C0:</b>&nbsp;Flo Beta<br>
 <b>Objet:</b>&nbsp;RE: Tr: Fwd: on va tester les forward avec contenu </div=
->
+222: >
 <div style=3D"font-family: Calibri, Arial, Helvetica, sans-serif; font-size=
-: 12pt; color: rgb(0, 0, 0);">
+224: : 12pt; color: rgb(0, 0, 0);">
 <br>
 </div>
 <div style=3D"font-family: Verdana; font-size: 12px;">Mais cest bien normal=
- !</div>
+228:  !</div>
 <div style=3D"font-family: Verdana; font-size: 12px;">&nbsp; </div>
 <div style=3D"font-family: Verdana; font-size: 12px;">&nbsp; </div>
 <div style=3D"margin: 10px 5px 5px 10px; padding-top: 10px; padding-bottom:=
- 10px; padding-left: 10px; border-left: 2px solid rgb(195, 217, 229);">
+232:  10px; padding-left: 10px; border-left: 2px solid rgb(195, 217, 229);">
 <div style=3D"margin: 0px 0px 10px; font-family: Verdana; font-size: 12px;"=
-><b>Envoy=E9:</b>&nbsp;mardi 27 janvier 2026 =E0 00:30<br>
-<b>De:</b>&nbsp;&quot;John D.&quot; &lt;original@source.com&gt;<br>
-<b>=C0:</b>&nbsp;&quot;Jane!&quot; &lt;inter-1@provider.com&gt;<br>
+234: ><b>Envoy=E9:</b>&nbsp;mardi 27 janvier 2026 =E0 00:30<br>
+<b>De:</b>&nbsp;&quot;Flo Beta&quot; &lt;florian.m@anonymized.com&gt;<br>
+<b>=C0:</b>&nbsp;&quot;Flo Yodj&quot; &lt;yodjj@anonymized.com&gt;<br>
 <b>Objet:</b>&nbsp;Fwd: on va tester les forward avec contenu</div>
-<div style=3D"font-family: Verdana; font-size: 12px;">Genial jane&nbsp;je=
- te remerci<br>
+<div style=3D"font-family: Verdana; font-size: 12px;">Genial Flo Yodj&nbsp;je=
+239:  te remerci<br>
 <br>
-John<br>
+Flo Alpha<br>
 &nbsp; </div>
 <div style=3D"font-family: Verdana; font-size: 12px;">---------- Forwarded =
-message ---------<br>
-From: <b>John Doe</b>&nbsp;&lt;<a class=3D"OWAAutoLink" id=3D"OWA5d10b333=
--e512-a0da-1fa5-fc849704297f" target=3D"_blank" href=3D"mailto:jane@mail.=
-com">inter-1@provider.com</a>&gt;<br>
+244: message ---------<br>
+From: <b>Flo Alpha</b>&nbsp;&lt;<a class=3D"OWAAutoLink" id=3D"OWA5d10b333=
+246: -e512-a0da-1fa5-fc849704297f" target=3D"_blank" href=3D"mailto:yodjj@anonymized.com">yodjj@anonymized.com</a>&gt;<br>
 Date: Tue, 27 Jan 2026 at 00:29<br>
 Subject: Tr: on va tester les forward avec contenu<br>
-To: John D. &lt;<a class=3D"OWAAutoLink" id=3D"OWAb60349cc-a9e4-b56d-2818-3d=
-6a59e834cd" target=3D"_blank" href=3D"mailto:original@source.com">floria=
-n.mezy@gmail.com</a>&gt;</div>
+To: Flo Beta &lt;<a class=3D"OWAAutoLink" id=3D"OWAb60349cc-a9e4-b56d-2818-3d=
+251: 6a59e834cd" target=3D"_blank" href=3D"mailto:florian.m@anonymized.com">florian.m@anonymized.com</a>&gt;</div>
 <div style=3D"font-family: Verdana; font-size: 12px;">&nbsp; </div>
-<div style=3D"font-family: Verdana; font-size: 12px;">Ok c'est not=E9 thiba=
-ut je vais regarde, je te le retransfere</div>
+<div style=3D"font-family: Verdana; font-size: 12px;">Ok c'est not=E9 Pierre je vais regarde, je te le retransfere</div>
 <div style=3D"font-family: Verdana; font-size: 12px;">&nbsp;</div>
-<div style=3D"font-family: Verdana; font-size: 12px;">Jane</div>
+<div style=3D"font-family: Verdana; font-size: 12px;">Yodjio</div>
 <div style=3D"font-family: Verdana; font-size: 12px;">&nbsp; </div>
 <div style=3D"font-family: Verdana; font-size: 12px;">&nbsp; </div>
 <div style=3D"margin: 10px 5px 5px 10px; padding-top: 10px; padding-bottom:=
- 10px; padding-left: 10px; border-left: 2px solid rgb(195, 217, 229);">
+261:  10px; padding-left: 10px; border-left: 2px solid rgb(195, 217, 229);">
 <div style=3D"margin: 0px 0px 10px; font-family: Verdana; font-size: 12px;"=
-><b>Envoy=E9:</b>&nbsp;mardi 27 janvier 2026 =E0 00:28<br>
-<b>De:</b>&nbsp;&quot;John D.&quot; &lt;<a class=3D"OWAAutoLink" id=3D"OWA76=
-24c3e5-6c9e-f037-2741-63fd03a47b56" target=3D"_blank" href=3D"mailto:floria=
-n.mezy@gmail.com">original@source.com</a>&gt;<br>
-<b>=C0:</b>&nbsp;&quot;Jane!&quot; &lt;<a class=3D"OWAAutoLink" id=3D"OWA310=
-1f011-9d29-b7a6-ca17-883c1711b463" target=3D"_blank" href=3D"mailto:jane@=
-mail.com">inter-1@provider.com</a>&gt;<br>
+263: ><b>Envoy=E9:</b>&nbsp;mardi 27 janvier 2026 =E0 00:28<br>
+<b>De:</b>&nbsp;&quot;Flo Beta&quot; &lt;<a class=3D"OWAAutoLink" id=3D"OWA76=
+265: 24c3e5-6c9e-f037-2741-63fd03a47b56" target=3D"_blank" href=3D"mailto:florian.m@anonymized.com">florian.m@anonymized.com</a>&gt;<br>
+<b>=C0:</b>&nbsp;&quot;Flo Yodj&quot; &lt;<a class=3D"OWAAutoLink" id=3D"OWA310=
+268: 1f011-9d29-b7a6-ca17-883c1711b463" target=3D"_blank" href=3D"mailto:yodjj@anonymized.com">yodjj@anonymized.com</a>&gt;<br>
 <b>Objet:</b>&nbsp;on va tester les forward avec contenu</div>
 <div style=3D"font-family: Verdana; font-size: 12px;">Hello. tu me foward&n=
-bsp;ca en&nbsp;retour il y aune pj merci</div>
+272: bsp;ca en&nbsp;retour il y aune pj merci</div>
 </div>
 </div>
 </body>

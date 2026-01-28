@@ -2,10 +2,24 @@
 
 Private NPM package to extract the **deepest** (original) sender and content from forwarded emails.
 
+## Architecture & Refactor
+
+The library recently underwent a major refactor to a plugin-based architecture, improving compatibility and fix recursion bugs.
+
+Detailed documentation can be found in the [docs/architecture/](docs/architecture/README.md) directory:
+- [Phase 1: Cc: Fix](docs/architecture/phase1_cc_fix.md)
+- [Phase 2: Plugin Architecture](docs/architecture/phase2_plugin_foundation.md)
+- [Phase 3: Full Compatibility (100%)](docs/architecture/phase3_fallbacks.md)
+- [Deep Forward Fix Walkthrough](docs/walkthrough_deep_forward_fix.md)
+- [Detector Usage Stats](docs/detectors_usage.md)
+
+**✅ Test Coverage:** The library has been validated against **239 fixtures** from the `email-forward-parser-recursive` library with a **100% success rate** (239/239). This includes validating message bodies and ensuring non-message snippets are correctly identified. See [Test Coverage Report](docs/TEST_COVERAGE.md) for details.
+
 ## Features
 
 - **Hybrid Strategy**: Combines MIME recursion (`message/rfc822`) and inline text parsing
-- **Robust Parsing**: Uses `mailparser` and `email-forward-parser` with fallback mechanisms
+- **Reply & Forward Support**: Detects both traditional "Forwarded message" blocks and "On ... wrote:" reply headers in 15+ languages.
+- **Robust Parsing**: Uses `mailparser` and `email-forward-parser` with custom detectors for Outlook Live, French headers, and more.
 - **Type-Safe**: Full TypeScript support
 - **Normalized Output**: Consistent result format with diagnostics
 
@@ -18,10 +32,23 @@ npm install
 ```typescript
 import { extractDeepestHybrid } from 'email-deepest-forward';
 
+// Process a full EML with hybrid strategy
 const result = await extractDeepestHybrid(rawEmailString);
+
+// Process ONLY the text/inline forwards (ignore MIME layer)
+const textOnlyResult = await extractDeepestHybrid(rawText, { skipMimeLayer: true });
+
 console.log(result.text); // The deepest original message
 console.log(result.history); // Full conversation chain
 ```
+
+## Options
+
+| Option | Type | Default | Description |
+| :--- | :--- | :--- | :--- |
+| `skipMimeLayer` | `boolean` | `false` | If `true`, ignores MIME parsing (`rfc822`) and processes the input as raw text only. Ideal for inputs that are already stripped of headers. |
+| `maxDepth` | `number` | `5` | Maximum number of recursion levels for MIME parsing. |
+| `timeoutMs` | `number` | `5000` | Timeout for MIME processing to prevent blocking on huge files. |
 
 ## Response Format
 
@@ -58,17 +85,21 @@ Rather than just finding the "original" source, the library reconstructs the ent
 - **`history[1...n-1]`**: Intermediate forwards/messages.
 - **`history[n]`**: The **root** (most recent) message you actually received.
 
-Each history entry contains its own `from`, `to`, `cc`, `subject`, `date_iso`, `text`, and **`flags`** (array of strings).
+Each history entry contains its own `from`, `to`, `cc`, `subject`, `date_iso`, `text`, and **`flags`** (array of strings). The contact fields (`from`, `to`, `cc`) are structured as objects containing:
+- **`name`**: The display name (e.g., "John Doe").
+- **`address`**: The email address (e.g., "john@example.com").
 
 #### Possible Flags:
 - `level:deepest`: The original source of the thread.
 - `level:root`: The entry representing the received email itself.
 - `trust:high_mime`: Metadata from a real `.eml` attachment (100% reliable).
 - `trust:medium_inline`: Metadata extracted from text patterns (best effort).
-- `method:crisp_engine`: Detected via standard international patterns.
-- `method:manual_fallback`: Detected via custom language rules (French, Outlook).
-- `format:outlook_fr`: Specifically identified as an Outlook French forward.
-- `format:standard`: A standard dashed separator or "From/De" block.
+- `method:crisp_engine`: Detected via standard international patterns (Crisp).
+- `method:outlook_fr`: Detected via standard rules (French, Outlook).
+- `method:outlook_reverse_fr`: Detected via reversed rules (Envoyé before De).
+- `method:outlook_empty_header`: Detected via permissive rules (No date/email).
+- `method:new_outlook`: Detected via modern localized headers (handles bolding and `mailto:` tags).
+- `method:reply`: Detected via international reply patterns (`On ... wrote:`).
 - `content:silent_forward`: The user forwarded the message without adding any text.
 - `date:unparseable`: A date string was found but could not be normalized to ISO.
 
@@ -76,33 +107,34 @@ Each history entry contains its own `from`, `to`, `cc`, `subject`, `date_iso`, `
 
 ```json
 {
-  "from": { "name": "Deepest Source", "address": "original@source.com" },
+  "from": { "name": "Original Sender Name", "address": "original@source.com" },
   "subject": "Initial Topic",
   "text": "The very first message content.",
   "history": [
     {
       "depth": 2,
-      "from": { "address": "original@source.com" },
+      "from": { "name": "Original Sender Name", "address": "original@source.com" },
       "text": "The very first message content.",
-      "flags": ["method:manual_fallback", "format:outlook_fr", "level:deepest"]
+      "flags": ["method:outlook_fr", "trust:medium_inline", "level:deepest"]
     },
     {
       "depth": 1,
       "from": { "name": "Intermediate Person", "address": "inter@company.com" },
       "text": "",
-      "flags": ["method:crisp_engine", "content:silent_forward"]
+      "flags": ["method:crisp", "trust:medium_inline", "content:silent_forward"]
     },
     {
       "depth": 0,
       "from": { "name": "Me", "address": "me@provider.com" },
       "text": "Check this thread below!",
-      "flags": ["level:root", "trust:high_mime"]
+      "flags": ["trust:high_mime", "level:root"]
     }
   ],
   "diagnostics": {
     "method": "inline",
     "depth": 2,
-    "parsedOk": true
+    "parsedOk": true,
+    "warnings": []
   }
 }
 ```
@@ -193,45 +225,46 @@ console.log(result.diagnostics.depth); // 4 (5 messages total)
 
 ```json
 {
-  "from": { "name": "John Source", "address": "original@source.com" },
+  "from": { "address": "original@source.com" },
   "subject": "original request",
   "text": "Hello, please forward this back to me.",
   "history": [
     {
       "depth": 4,
-      "from": { "name": "John Source", "address": "original@source.com" },
+      "from": { "address": "original@source.com" },
       "text": "Hello, please forward this back to me.",
-      "flags": ["method:manual_fallback", "format:standard", "level:deepest"]
+      "flags": ["method:crisp", "trust:medium_inline", "level:deepest"]
     },
     {
       "depth": 3,
-      "from": { "name": "First Provider", "address": "inter-1@provider.com" },
+      "from": { "address": "inter-1@provider.com" },
       "text": "Ok noted, I am forwarding it back to you.",
-      "flags": ["method:crisp_engine", "trust:medium_inline"]
+      "flags": ["method:crisp", "trust:medium_inline"]
     },
     {
       "depth": 2,
       "from": { "name": "Employee", "address": "real.end@gmail.com" },
       "text": "Great Yodjii, thank you",
-      "flags": ["method:manual_fallback", "format:outlook_fr"]
+      "flags": ["method:outlook_empty_header", "trust:medium_inline"]
     },
     {
       "depth": 1,
       "from": { "name": "Intermediate Manager", "address": "inter-2@corp.com" },
       "text": "But it is quite normal!",
-      "flags": ["method:crisp_engine", "trust:medium_inline"]
+      "flags": ["method:crisp", "trust:medium_inline"]
     },
     {
       "depth": 0,
-      "from": { "name": "Boss", "address": "boss@corp.com" },
+      "from": { "address": "boss@corp.com" },
       "text": "Check the bottom of this long thread.",
-      "flags": ["level:root", "trust:high_mime"]
+      "flags": ["trust:high_mime", "level:root"]
     }
   ],
   "diagnostics": {
     "method": "inline",
     "depth": 4,
-    "parsedOk": true
+    "parsedOk": true,
+    "warnings": []
   }
 }
 ```
@@ -253,7 +286,70 @@ console.log(result.from.name);       // "Expert Auto"
 console.log(result.date_iso);        // "2025-02-10T10:39:00.000Z"
 ```
 
-## Error Handling & Edge Cases
+## Extensions & Plugins (Custom Detectors)
+
+The library allows you to inject **custom forward detectors** to handle specific corporate headers, regional formats, or proprietary email barriers that are not covered by the default detectors.
+
+This system is built on **Dependency Injection**, meaning your custom logic lives in your application code, not deeper in `node_modules`.
+
+### How to create a Plugin
+Implement the `ForwardDetector` interface:
+
+```typescript
+import { extractDeepestHybrid, ForwardDetector, DetectionResult } from 'email-deepest-forward';
+
+class MyCustomDetector implements ForwardDetector {
+    // Unique name for your detector (will appear in 'diagnostics.method')
+    name = 'my-custom-detector';
+    
+    // Priority: Lower number = Higher priority.
+    // 0 = Crisp (Default Lib), -10 = Override everything, 10 = Fallback
+    priority = -10;
+
+    detect(text: string): DetectionResult {
+        // Example: Detects '--- START FORWARD ---'
+        const marker = '--- START FORWARD ---';
+        const idx = text.indexOf(marker);
+
+        if (idx !== -1) {
+            // Extracted body (text AFTER the marker)
+            const body = text.substring(idx + marker.length).trim();
+            
+            // Text BEFORE the marker (the message from the forwarder)
+            const message = text.substring(0, idx).trim();
+
+            return {
+                found: true,
+                detector: this.name,
+                confidence: 'high',
+                message: message, // Important for history reconstruction
+                email: {
+                    from: { name: 'Detected Sender', address: 'sender@example.com' },
+                    subject: 'Extracted Subject',
+                    date: new Date().toISOString(),
+                    body: body
+                }
+            };
+        }
+        
+        return { found: false, confidence: 'low' };
+    }
+}
+```
+
+### How to use it
+Pass your detector instance in the `options.customDetectors` array:
+
+```typescript
+const result = await extractDeepestHybrid(emailContent, {
+    customDetectors: [ new MyCustomDetector() ]
+});
+
+console.log(result.diagnostics.method); // "method:my-custom-detector"
+```
+
+---
+
 
 ### Malformed Inputs
 If you pass a string that isn't an email (e.g., a simple welcome message), the library returns the text but sets `parsedOk` to `false`.

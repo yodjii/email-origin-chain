@@ -75,4 +75,50 @@ Texte de la facture`;
         expect(res.from?.address).toBe('user@email.com');
         expect(res.date_iso).toBeNull();
     });
+
+    test('french outlook no separators', async () => {
+        const fs = require('fs');
+        const path = require('path');
+        const raw = fs.readFileSync(path.join(__dirname, 'fixtures', 'outlook-fr-no-separators.txt'), 'utf8');
+
+        const res = await extractDeepestHybrid(raw, { skipMimeLayer: true });
+
+        // Depth should be 2 (Root -> Forward 1 -> Forward 2)
+        // Original message: "Ce message est trés imortant"
+        // First reply/forward: "D'accord, je vais le regarder."
+        // Root: (contains the whole thread)
+
+        expect(res.diagnostics.depth).toBe(2);
+
+        // Deepest sender (flo mez) - Address extraction might fail if not present in De line, so check name or address fallback
+        // In the fixture: "De : flo mez" (no address)
+        expect(res.from?.name || res.from?.address).toBe('flo mez');
+
+        expect(res.text).toContain('Ce message est trés imortant');
+        expect(res.history.length).toBe(3);
+    });
+
+    describe('Diagnostics Method', () => {
+        test('should return rfc822 when found via MIME', async () => {
+            const eml = `From: boss@corp.com\nSubject: Root\nContent-Type: multipart/mixed; boundary="limit"\n\n--limit\nContent-Type: message/rfc822\n\nFrom: original@source.com\nSubject: Nested\nDate: Mon, 26 Jan 2026 10:00:00 +0000\n\nDeep Content\n--limit--`;
+            const result = await extractDeepestHybrid(eml);
+            expect(result.diagnostics.method).toBe('rfc822');
+            expect(result.diagnostics.depth).toBe(1);
+        });
+
+        test('should return fallback when no forward found', async () => {
+            const simple = `From: alice@example.com\nSubject: Hi\nDate: Mon, 26 Jan 2026 10:00:00 +0000\n\nJust a normal email.`;
+            const result = await extractDeepestHybrid(simple);
+            expect(result.diagnostics.method).toBe('fallback');
+            expect(result.diagnostics.depth).toBe(0);
+        });
+
+        test('should return inline when found via text patterns', async () => {
+            const forward = `From: me@company.com\nSubject: Fwd: info\n\n---------- Forwarded message ---------\nFrom: sender@other.com\nSubject: info\n\nText`;
+            const result = await extractDeepestHybrid(forward);
+            const detected = result.diagnostics.method;
+            expect(detected === 'inline' || detected.includes('method:')).toBeTruthy();
+            expect(result.diagnostics.depth).toBe(1);
+        });
+    });
 });
