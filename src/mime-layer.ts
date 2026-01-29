@@ -43,7 +43,12 @@ export async function processMime(raw: string, options: Options): Promise<MimeRe
                 date_iso: parsed.date ? parsed.date.toISOString() : null,
                 text: parsed.text || null, // Will be "exclusive" text once we know if there’s a forward inside
                 depth,
-                flags: ['trust:high_mime']
+                flags: ['trust:high_mime'],
+                attachments: parsed.attachments.map(att => ({
+                    filename: att.filename,
+                    contentType: att.contentType || 'application/octet-stream',
+                    size: att.size || 0
+                }))
             });
 
             // Check for attached messages

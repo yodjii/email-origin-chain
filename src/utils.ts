@@ -80,6 +80,50 @@ export function cleanText(text: string | null | undefined): string | null {
         .trim();
 }
 
+export function extractInlineAttachments(text: string | null | undefined): import('./types').Attachment[] {
+    if (typeof text !== 'string') return [];
+
+    const attachments: import('./types').Attachment[] = [];
+    const attachmentRegex = /<([-a-zA-Z0-9._ ]+\.([a-zA-Z0-9]+))>/g;
+    let match;
+
+    const extensionMap: Record<string, string> = {
+        'pdf': 'application/pdf',
+        'jpg': 'image/jpeg',
+        'jpeg': 'image/jpeg',
+        'png': 'image/png',
+        'gif': 'image/gif',
+        'zip': 'application/zip',
+        'rar': 'application/x-rar-compressed',
+        '7z': 'application/x-7z-compressed',
+        'doc': 'application/msword',
+        'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'xls': 'application/vnd.ms-excel',
+        'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'txt': 'text/plain',
+        'csv': 'text/csv',
+        'html': 'text/html',
+        'xml': 'application/xml',
+        'json': 'application/json'
+    };
+
+    while ((match = attachmentRegex.exec(text)) !== null) {
+        const filename = match[1];
+        const ext = match[2]?.toLowerCase();
+
+        // Prevent duplicate filenames in the same node
+        if (!attachments.find(a => a.filename === filename)) {
+            attachments.push({
+                filename: filename,
+                contentType: extensionMap[ext] || 'application/octet-stream',
+                size: 0
+            });
+        }
+    }
+
+    return attachments;
+}
+
 /**
  * Normalizes EmailAddress to fix edge cases like "email [email]" pattern
  * 

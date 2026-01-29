@@ -1,6 +1,6 @@
 import EmailForwardParser from 'email-forward-parser';
 import { DetectorRegistry } from './detectors';
-import { normalizeDateToISO, cleanText, normalizeFrom } from './utils';
+import { normalizeDateToISO, cleanText, normalizeFrom, extractInlineAttachments } from './utils';
 import { ResultObject, HistoryEntry } from './types';
 
 import { ForwardDetector } from './detectors/types';
@@ -37,8 +37,7 @@ export async function processInline(
         });
     }
 
-    // Detection loop: This allows combining the library (CrispDetector) 
-    // with custom local detectors (OutlookFRDetector, etc.)
+    // Detection loop
     while (currentDepth < maxRecursiveDepth) {
         const result = registry.detect(currentText);
 
@@ -46,6 +45,16 @@ export async function processInline(
             // No more forwards detected
             const lastIdx = history.length - 1;
             history[lastIdx].text = cleanText(currentText);
+
+            // Enrich with inline attachments if not already present
+            const inlineAtts = extractInlineAttachments(history[lastIdx].text);
+            if (inlineAtts.length > 0) {
+                const existing = history[lastIdx].attachments || [];
+                const toAdd = inlineAtts.filter(a => !existing.find(e => e.filename === a.filename));
+                if (toAdd.length > 0) {
+                    history[lastIdx].attachments = [...existing, ...toAdd];
+                }
+            }
             break;
         }
 
@@ -56,6 +65,16 @@ export async function processInline(
         history[previousIdx].text = cleanText(result.message || '');
         if (!history[previousIdx].text && !history[previousIdx].flags.includes('content:silent_forward')) {
             history[previousIdx].flags.push('content:silent_forward');
+        }
+
+        // Enrich previous level with inline attachments
+        const prevInlineAtts = extractInlineAttachments(history[previousIdx].text);
+        if (prevInlineAtts.length > 0) {
+            const existing = history[previousIdx].attachments || [];
+            const toAdd = prevInlineAtts.filter(a => !existing.find(e => e.filename === a.filename));
+            if (toAdd.length > 0) {
+                history[previousIdx].attachments = [...existing, ...toAdd];
+            }
         }
 
         // Build flags 
@@ -71,7 +90,7 @@ export async function processInline(
             flags.push('date:unparseable');
         }
 
-        // Normalize from address (fix patterns like "email [email]")
+        // Normalize from address
         let fromNormalized: import('./types').EmailAddress | null = typeof email.from === 'object'
             ? { name: email.from.name, address: email.from.address }
             : (email.from ? { address: email.from } : null);
@@ -79,14 +98,16 @@ export async function processInline(
         fromNormalized = normalizeFrom(fromNormalized);
 
         // Add this forward level to history
+        const cleanedBody = cleanText(email.body || '');
         history.push({
             from: fromNormalized,
             subject: email.subject || null,
             date_raw: email.date || null,
             date_iso: dateIso,
-            text: cleanText(email.body || ''),
+            text: cleanedBody,
             depth: currentDepth + 1,
-            flags: flags
+            flags: flags,
+            attachments: extractInlineAttachments(cleanedBody)
         });
 
         // Continue with the body for next iteration

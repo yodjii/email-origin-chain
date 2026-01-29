@@ -28,6 +28,7 @@ export interface HistoryEntry {
     text: string | null; // The text content EXCLUSIVE to this level (not including nested forwards)
     depth: number;
     flags: string[];
+    attachments?: Attachment[];
 }
 
 export interface ResultObject {

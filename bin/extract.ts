@@ -41,8 +41,25 @@ async function main() {
             console.log(result.text);
             console.log('--------------------\n');
 
-            if (result.history.length > 1) {
-                console.log(`History: ${result.history.length} levels found.`);
+            if (result.history.length > 0) {
+                console.log('--- CONVERSATION HISTORY (Deepest First) ---');
+                result.history.forEach((entry, idx) => {
+                    const isDeepest = entry.flags.includes('level:deepest');
+                    const isRoot = entry.flags.includes('level:root');
+                    let label = `[LEVEL ${entry.depth}]`;
+                    if (isDeepest) label = '[ORIGIN]';
+                    if (isRoot) label = '[RECEIPT]';
+
+                    console.log(`${label.padEnd(10)} ${entry.from?.name || '(no name)'} <${entry.from?.address || '(no email)'}>`);
+                    console.log(`           Subject: ${entry.subject || '(no subject)'}`);
+                    console.log(`           Date:    ${entry.date_iso || entry.date_raw || '(no date)'}`);
+                    console.log(`           Flags:   ${entry.flags.join(', ')}`);
+
+                    if (idx < result.history.length - 1) {
+                        console.log('               ↓');
+                    }
+                });
+                console.log('--------------------------------------------\n');
             }
         }
     } catch (error) {
