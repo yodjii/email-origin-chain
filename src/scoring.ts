@@ -57,8 +57,34 @@ export function calculateConfidence(fullBody: string, depth: number): Confidence
         let explainedCount = 0;
         // Look back 150 chars for context
         const contextWindow = 150;
-        // Keywords: To, Cc, From, De, A, Para, Copies (case insensitive)
-        const headerPattern = /(?:From|De|To|À|A|Para|Cc|Copie|Copies|Appreciated|Reply-To|Répondre à)\s*:/i;
+        // Keywords from email-forward-parser (parser.js) covering multiple languages
+        // Includes: From, To, Cc, Reply-To and their localized variants
+        const keywords = [
+            // From
+            "From", "Od", "Fra", "Von", "De", "Lähettäjä", "Šalje", "Feladó", "Da", "Van", "Expeditorul",
+            "Отправитель", "Från", "Kimden", "Від кого", "Saatja", "De la", "Gönderen", "От", "Від",
+            "Mittente", "Nadawca", "送信元",
+
+            // To
+            "To", "Komu", "Til", "An", "Para", "Vastaanottaja", "À", "Prima", "Címzett", "A", "Aan", "Do",
+            "Destinatarul", "Кому", "Pre", "Till", "Kime", "Pour", "Adresat", "送信先",
+
+            // Cc
+            "Cc", "CC", "Kopie", "Kopio", "Másolat", "Kopi", "Dw", "Копия", "Kopia", "Bilgi", "Копія",
+            "Másolatot kap", "Kópia", "Copie à",
+
+            // Reply-To
+            "Reply-To", "Odgovori na", "Odpověď na", "Svar til", "Antwoord aan", "Vastaus", "Répondre à",
+            "Antwort an", "Válaszcím", "Rispondi a", "Odpowiedź-do", "Responder A", "Responder a",
+            "Răspuns către", "Ответ-Кому", "Odpovedať-Pre", "Svara till", "Yanıt Adresi", "Кому відповісти",
+            "Appreciated" // Legacy/Specific
+        ];
+
+        // Construct regex: (?:Keyword1|Keyword2|...)\s*:
+        // Sort by length desc to ensure "De la" matches before "De"
+        const sortedKeywords = Array.from(new Set(keywords)).sort((a, b) => b.length - a.length);
+        const patternString = `(?:${sortedKeywords.map(k => k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})\\s*:`;
+        const headerPattern = new RegExp(patternString, 'i');
 
         for (const email of emails) {
             // Extract the text chunk preceding the email
