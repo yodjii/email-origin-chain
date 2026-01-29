@@ -80,11 +80,28 @@ export function calculateConfidence(fullBody: string, depth: number): Confidence
             "Appreciated" // Legacy/Specific
         ];
 
-        // Construct regex: (?:Keyword1|Keyword2|...)\s*:
-        // Sort by length desc to ensure "De la" matches before "De"
-        const sortedKeywords = Array.from(new Set(keywords)).sort((a, b) => b.length - a.length);
-        const patternString = `(?:${sortedKeywords.map(k => k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})\\s*:`;
-        const headerPattern = new RegExp(patternString, 'i');
+        // Keywords specific to Senders (From) to detect missed separators
+        const fromKeywords = [
+            "From", "Od", "Fra", "Von", "De", "Lähettäjä", "Šalje", "Feladó", "Da", "Van", "Expeditorul",
+            "Отправитель", "Från", "Kimden", "Від кого", "Saatja", "De la", "Gönderen", "От", "Від",
+            "Mittente", "Nadawca", "送信元"
+        ];
+
+        // Construct regexes
+        const buildRegex = (words: string[], strict: boolean = false) => {
+            const sorted = Array.from(new Set(words)).sort((a, b) => b.length - a.length);
+            const joined = sorted.map(k => k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|');
+            // If strict, we want the pattern to appear at the END of the preText (ignoring name chars)
+            if (strict) {
+                return new RegExp(`(?:${joined})\\s*:\\s*[^:\\n]*$`, 'i');
+            }
+            return new RegExp(`(?:${joined})\\s*:`, 'i');
+        };
+
+        const headerPattern = buildRegex(keywords, false); // Loose check for "context"
+        const fromPattern = buildRegex(fromKeywords, true); // Strict check for "Sender"
+
+        let fromCount = 0;
 
         for (const email of emails) {
             // Extract the text chunk preceding the email
@@ -92,13 +109,24 @@ export function calculateConfidence(fullBody: string, depth: number): Confidence
             const preText = fullBody.substring(start, email.index);
 
             // Get the "logical block" (lines near the email)
-            // We split by double newline to isolate the paragraph/block
             const blocks = preText.split(/\n\s*\n/);
-            const currentBlock = blocks[blocks.length - 1]; // The closest text block
+            const currentBlock = blocks[blocks.length - 1];
 
             if (headerPattern.test(currentBlock)) {
                 explainedCount++;
             }
+
+            // For From Check: Look strictly at the text immediately preceding the email
+            if (fromPattern.test(preText)) {
+                fromCount++;
+            }
+        }
+
+        // CRITICAL CHECK: If we see more "From:" headers than the depth, 
+        // it means we likely missed some separators.
+        // e.g. Depth 1, but we see 2 "From:" => Suspect.
+        if (fromCount > depth) {
+            return { score: 25, description: `Low Confidence (Suspect: Detected ${fromCount} senders for depth ${depth})` };
         }
 
         const explainedRatio = count > 0 ? explainedCount / count : 0;

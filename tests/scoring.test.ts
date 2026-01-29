@@ -54,6 +54,24 @@ describe('Confidence Scoring System', () => {
         expect(result.description).toContain('High Density Header');
     });
 
+    test('Suspect High Density (Missed Separator) -> Score 25', () => {
+        // Depth 1, but found 2 "From:" headers implies we missed a level
+        const depth = 1;
+        const body = `
+        From: user1 <a@a.com>
+        To: user2 <b@a.com>
+        
+        Some text...
+        
+        From: user3 <c@a.com>
+        To: user4 <d@a.com>
+        `;
+
+        const result = calculateConfidence(body, depth);
+        expect(result.score).toBe(25);
+        expect(result.description).toContain('Detected 2 senders');
+    });
+
     test('Suspect High Density (Ratio > 2.4 + No Headers) -> Score 25', () => {
         // Depth 1, 5 Emails scattered in text without headers
         const depth = 1;
