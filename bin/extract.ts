@@ -53,6 +53,7 @@ async function main() {
                     console.log(`${label.padEnd(10)} ${entry.from?.name || '(no name)'} <${entry.from?.address || '(no email)'}>`);
                     console.log(`           Subject: ${entry.subject || '(no subject)'}`);
                     console.log(`           Date:    ${entry.date_iso || entry.date_raw || '(no date)'}`);
+                    console.log(`           Flags:   ${entry.flags.join(', ')}`);
 
                     // Add body snippet (first 50 chars)
                     const bodySnippet = (entry.text || '').trim();
@@ -60,7 +61,6 @@ async function main() {
                         ? (bodySnippet.length > 50 ? bodySnippet.substring(0, 50).replace(/\n/g, ' ') + '...' : bodySnippet.replace(/\n/g, ' '))
                         : '(empty body)';
                     console.log(`           Body:    ${snippet}`);
-                    console.log(`           Flags:   ${entry.flags.join(', ')}`);
 
                     if (idx < result.history.length - 1) {
                         console.log('               ↓');
