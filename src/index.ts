@@ -2,6 +2,7 @@ import { processMime } from './mime-layer';
 import { processInline } from './inline-layer';
 import { Options, ResultObject, Attachment } from './types';
 import { normalizeDateToISO, cleanText, normalizeFrom } from './utils';
+import { calculateConfidence } from './scoring';
 
 /**
  * Main entry point: Extract the deepest forwarded email using hybrid strategy
@@ -90,6 +91,9 @@ export async function extractDeepestHybrid(raw: string, options?: Options): Prom
         // Destructure to exclude 'from' since we have our own normalized version
         const { from: _unusedFrom, ...restInlineResult } = inlineResult;
 
+        // Calculate confidence score
+        const confidence = calculateConfidence(mimeResult.rawBody, mimeResult.depth + inlineResult.diagnostics.depth);
+
         const result: ResultObject = {
             ...restInlineResult,
             // Use our normalized/enriched values
@@ -100,6 +104,11 @@ export async function extractDeepestHybrid(raw: string, options?: Options): Prom
             date_iso,
             text: cleanText(text),
             full_body: mimeResult.rawBody,
+
+            // Confidence
+            confidence_score: confidence.score,
+            confidence_description: confidence.description,
+
             attachments: [...attachments, ...inlineResult.attachments],
             diagnostics: {
                 ...inlineResult.diagnostics,
