@@ -1,77 +1,92 @@
 import { ForwardDetector, DetectionResult } from './types';
+import { Cleaner } from '../utils/cleaner';
 
 /**
  * Detector for Outlook forwards (French) where "Envoyé:" comes BEFORE "De:".
- * Example:
- * ________________________________
- * Envoyé: mardi 27 janvier 2026 à 00:30
- * De: "Flo M." <florian.mezy@gmail.com>
- * À: "Flo!" <yodjii@mail.com>
- * Objet: Fwd: ...
  */
 export class OutlookReverseFrDetector implements ForwardDetector {
     readonly name = 'outlook_reverse_fr';
-    readonly priority = -2; // Specific detector - High Priority
+    readonly priority = -20; // Specific detector - High Priority (Override)
 
-    // Regex to capture the block:
-    // 1. Optional Separator
-    // 2. Envoyé: ... (Date)
-    // 3. De: ... (From)
-    // 4. À: ... (To)
-    // 5. Objet: ... (Subject)
-    // 6. Body
-    // Using lazy match [\s\S]*? for content before.
-    // Simplified Regex: Only require Envoy and De. Captures everything else in the last group.
-    private readonly SPLIT_PATTERN = /([\s\S]*?)(?:_{30,}\s*)?(?:^|\r?\n)Envoy.*?:\s*(.*)\r?\nDe\s*:\s*([^\r\n]+)([\s\S]*)$/i;
+    // Regex patterns for field detection
+    private readonly ENVOYE_PATTERN = /^[ \t]*Envoy(?:é|=E9|e)?\s*:\s*(.*?)\s*$/m;
+    private readonly DE_PATTERN = /^[ \t]*De\s*:/i;
+    private readonly A_PATTERN = /^[ \t]*(?:À|A|=C0)\s*:/i;
+    private readonly OBJET_PATTERN = /^[ \t]*Objet\s*:/i;
 
     detect(text: string): DetectionResult {
-        const match = this.SPLIT_PATTERN.exec(text);
+        // 1. Expert Normalization
+        const normalized = Cleaner.normalize(text);
+        const lines = normalized.split('\n');
 
-        if (match) {
-            const message = match[1].trim();
-            const dateLine = match[2].trim();
-            const fromLine = match[3].trim();
+        // Find "Envoyé:" as an anchor
+        const envoyeMatch = this.ENVOYE_PATTERN.exec(normalized);
+        if (!envoyeMatch) return { found: false, confidence: 'low' };
 
-            // match[4] contains "To: ... \n Objet: ... \n\n Body"
-            // We try to extract Subject and Body from it.
-            const rest = match[4];
-            let subjectLine = '';
-            let body = rest;
+        const envoyeIdx = envoyeMatch.index;
 
-            // Simple regex to find "Objet: ..." line
-            const subjectMatch = rest.match(/[\r\n]Objet\s*:\s*([^\r\n]+)[\r\n]/i);
-            if (subjectMatch) {
-                subjectLine = subjectMatch[1].trim();
-                const subjectIdx = rest.indexOf(subjectMatch[0]);
-                const subjectEndIdx = subjectIdx + subjectMatch[0].length;
+        // Search in a window after "Envoyé:" for "De:"
+        // Combined with a window-stop at empty line
+        const windowLimit = 15;
+        const textUntilEnvoye = normalized.substring(0, envoyeIdx);
+        const envoyeLineIndex = textUntilEnvoye.split('\n').length - 1;
 
-                // We assume body starts immediately after subject line.
-                // Any extra newlines (e.g. \n\n) will be removed by trim().
-                // Searching for \n\n is unsafe because if the separator is single \n, 
-                // we might skip the entire first paragraph of the body.
-                body = rest.substring(subjectEndIdx).trim();
-            }
-
-            if (fromLine.length > 0) {
-                return {
-                    found: true,
-                    detector: this.name,
-                    confidence: 'high',
-                    message: message,
-                    email: {
-                        from: fromLine,
-                        subject: subjectLine,
-                        date: dateLine,
-                        body: body
-                    }
-                };
-            }
+        let searchWindow: string[] = [];
+        for (let i = envoyeLineIndex; i < Math.min(lines.length, envoyeLineIndex + windowLimit); i++) {
+            if (i > envoyeLineIndex && lines[i].trim() === '') break;
+            searchWindow.push(lines[i]);
         }
 
+        const findInWindow = (pattern: RegExp) => {
+            for (let i = 0; i < searchWindow.length; i++) {
+                if (pattern.test(searchWindow[i])) {
+                    return { index: envoyeLineIndex + i, line: searchWindow[i] };
+                }
+            }
+            return null;
+        };
+
+        const de = findInWindow(this.DE_PATTERN);
+        if (!de) return { found: false, confidence: 'low' };
+
+        const a = findInWindow(this.A_PATTERN);
+        const objet = findInWindow(this.OBJET_PATTERN);
+
+        const foundHeaders = [{ index: envoyeLineIndex, line: envoyeMatch[0] }, de];
+        if (a) foundHeaders.push(a);
+        if (objet) foundHeaders.push(objet);
+
+        const firstHeaderIndex = Math.min(...foundHeaders.map(h => h.index));
+        const lastHeaderIndex = Math.max(...foundHeaders.map(h => h.index));
+
+        // 2. Expert Body Extraction
+        const bodyContent = Cleaner.extractBody(lines, lastHeaderIndex);
+        const finalBody = lines[firstHeaderIndex].startsWith('>') ? Cleaner.stripQuotes(bodyContent) : bodyContent;
+
+        // 3. Metadata
+        const extractValue = (line: string) => {
+            const colonIdx = line.indexOf(':');
+            return colonIdx !== -1 ? line.substring(colonIdx + 1).trim() : '';
+        };
+
+        const deValue = extractValue(de.line);
+        const deMatch = deValue.match(/(.+?)(?:\s*[<\[](.+?)[>\]])?\s*$/);
+        const fromName = deMatch ? deMatch[1].trim().replace(/["']/g, '') : deValue;
+        const fromEmail = deMatch && deMatch[2] ? deMatch[2].trim() : (fromName.includes('@') ? fromName : '');
 
         return {
-            found: false,
-            confidence: 'low'
+            found: true,
+            detector: this.name,
+            confidence: 'high',
+            message: firstHeaderIndex > 0 ? lines.slice(0, firstHeaderIndex).join('\n').trim() : undefined,
+            email: {
+                from: fromEmail.includes('@')
+                    ? { name: fromName !== fromEmail ? fromName : '', address: fromEmail }
+                    : { name: fromName, address: fromName },
+                subject: objet ? extractValue(objet.line) : '',
+                date: extractValue(envoyeMatch[0]),
+                body: finalBody
+            }
         };
     }
 }

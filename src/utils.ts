@@ -100,58 +100,38 @@ export function normalizeFrom(from: EmailAddress | null | undefined): EmailAddre
     // This handles cases like: "Name" <email<mailto:email>> or email<mailto:email>>
     let cleanedAddress = from.address;
     if (cleanedAddress) {
-        // Remove all <mailto:...> occurrences
-        cleanedAddress = cleanedAddress.replace(/<mailto:[^>]+>/g, '');
+        // PRE-CLEAN: Strip mailto: residue immediately as it confuses all other regexes
+        cleanedAddress = cleanedAddress.replace(/<mailto:[^>\s]+>?/gi, '');
 
-        // Count < and > to remove extras
-        const openCount = (cleanedAddress.match(/</g) || []).length;
-        const closeCount = (cleanedAddress.match(/>/g) || []).length;
-
-        // Remove excess > from the end
-        if (closeCount > openCount) {
-            const excess = closeCount - openCount;
-            for (let i = 0; i < excess; i++) {
-                cleanedAddress = cleanedAddress.replace(/>$/, '');
-            }
-        }
-
-        cleanedAddress = cleanedAddress.trim();
-    }
-
-    // 1. Clean up "address" field if it contains weird patterns
-    if (cleanedAddress) {
-        // Fix "Name" <email> or Name <email> pattern in address field (should be in name field)
+        // 1. Fix "Name" <email> or Name <email> pattern in address field
         const nameEmailMatch = cleanedAddress.match(/^(?:"([^"]+)"|([^<]+?))\s*<([^>]+)>$/);
         if (nameEmailMatch) {
             const extractedName = nameEmailMatch[1] || nameEmailMatch[2];
             const extractedEmail = nameEmailMatch[3];
             if (/^[^\s@]+@[^\s@]+\.[^\s@,]+$/.test(extractedEmail)) {
-                return {
+                return normalizeFrom({
                     name: extractedName?.trim() || from.name,
                     address: extractedEmail.trim()
-                };
+                });
             }
         }
 
-        // Fix "email [email]" pattern
+        // 2. Fix "email [email]" pattern (identical emails)
         if (cleanedAddress.includes('[')) {
             const match = cleanedAddress.match(/^([^\s@]+@[^\s@]+\.[^\s@,]+)\s*\[([^\]]+)\]$/);
             if (match && match[1] === match[2]) {
-                return {
-                    name: from.name,
-                    address: match[1]
-                };
+                cleanedAddress = match[1];
             }
         }
 
-        // If cleaned address is a simple valid email, use it
-        if (/^[^\s@]+@[^\s@]+\.[^\s@,]+$/.test(cleanedAddress)) {
-            return {
-                name: from.name,
-                address: cleanedAddress
-            };
-        }
+        // 3. FINAL RESIDUE STRIP: Remove any leftover markers
+        cleanedAddress = cleanedAddress.replace(/[<>\[\]]/g, '').trim();
+
+        // Update the address in the object for further logic
+        from.address = cleanedAddress;
     }
+
+    // ... (rest of logic for empty address)
 
     // 2. If address is empty but name contains a pattern "email [email]"
     if (!from.address && from.name) {
@@ -175,12 +155,11 @@ export function normalizeFrom(from: EmailAddress | null | undefined): EmailAddre
         }
     }
 
-    // 3. FINAL POLISH: Strip any leftover bold/italic markers (* or _) from name and address
+    // 3. FINAL POLISH: Strip any leftover bold/italic markers (* or _) and brackets/quotes
     if (from.name) {
-        from.name = from.name.replace(/^[\*\_]+|[\*\_]+$/g, '').trim();
+        from.name = from.name.replace(/^[\*\_>]+|[\*\_>]+$/g, '').replace(/[<>\[\]]/g, '').trim();
     }
     if (from.address) {
-        // Address should already be clean, but just in case
         from.address = from.address.replace(/^[\*\_]+|[\*\_]+$/g, '').trim();
     }
 

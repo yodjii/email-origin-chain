@@ -7,7 +7,7 @@ import { ForwardDetector, DetectionResult } from './types';
  */
 export class CrispDetector implements ForwardDetector {
     readonly name = 'crisp';
-    readonly priority = 0; // Highest priority - universal library
+    readonly priority = 100; // Fallback - universal library (lower priority than specifics)
 
     private parser = new EmailForwardParser();
 

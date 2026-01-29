@@ -7,7 +7,7 @@ describe('Plugin System', () => {
     // Define a custom detector that looks for a specific pattern
     class CustomMagicDetector implements ForwardDetector {
         name = 'magic-plugin';
-        priority = -10; // Very high priority (overrides all built-ins)
+        priority = -100; // Very high priority (overrides all built-ins)
 
         detect(text: string): DetectionResult {
             // Looks for "----*MAGIC-FORWARD-START*----"
