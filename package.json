@@ -1,10 +1,23 @@
 {
-  "name": "email-deepest-forward",
+  "name": "mail-origin-chain",
   "version": "1.0.0",
-  "description": "Extract the deepest forwarded email using hybrid MIME and inline parsing",
+  "description": "Uncover the full audit trail of your email threads. Recursively reconstructs the entire conversation history with instant access to the original sender and true source message.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "private": true,
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "docs"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yodjii/mail-origin-chain.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yodjii/mail-origin-chain/issues"
+  },
+  "homepage": "https://github.com/yodjii/mail-origin-chain#readme",
   "scripts": {
     "build": "tsc",
     "test": "jest",
