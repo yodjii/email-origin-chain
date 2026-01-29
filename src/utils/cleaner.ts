@@ -1,14 +1,28 @@
-
 export class Cleaner {
+    private static normalizationCache = new Map<string, string>();
+
     /**
      * Normalizes whitespace scories (BOM, nbsp, line breaks)
      */
     static normalize(text: string): string {
-        return text
+        if (!text) return '';
+
+        const cached = this.normalizationCache.get(text);
+        if (cached !== undefined) return cached;
+
+        const normalized = text
             .replace(/\r\n/gm, '\n')
             .replace(/\uFEFF/gm, '')
             .replace(/\u00A0$/gm, '')
-            .replace(/\u00A0/gm, ' ');
+            .replace(/\u00A0/gm, ' ')
+            .trim();
+
+        if (this.normalizationCache.size > 200) {
+            this.normalizationCache.clear();
+        }
+        this.normalizationCache.set(text, normalized);
+
+        return normalized;
     }
 
     /**

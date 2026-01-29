@@ -4,7 +4,6 @@ import * as anyDateParser from 'any-date-parser';
 
 export function normalizeDateToISO(dateRaw: string | Date | null | undefined): string | null {
     if (!dateRaw) return null;
-    console.log(`normalizeDateToISO input: "${dateRaw}"`); // DEBUG
 
     if (dateRaw instanceof Date) {
         return dateRaw.toISOString();

@@ -11,7 +11,7 @@ Detailed documentation can be found in the [docs/architecture/](docs/architectur
 - [Phase 2: Plugin Architecture](docs/architecture/phase2_plugin_foundation.md)
 - [Phase 3: Full Compatibility (100%)](docs/architecture/phase3_fallbacks.md)
 - [Deep Forward Fix Walkthrough](docs/walkthrough_deep_forward_fix.md)
-- [Detector Usage Stats](docs/detectors_usage.md)
+- [Detector Usage & Priorities](docs/detectors_usage.md)
 
 **✅ Test Coverage:** The library has been validated against **239 fixtures** from the `email-forward-parser-recursive` library with a **100% success rate** (239/239). This includes validating message bodies and ensuring non-message snippets are correctly identified. See [Test Coverage Report](docs/TEST_COVERAGE.md) for details.
 
@@ -27,6 +27,12 @@ Detailed documentation can be found in the [docs/architecture/](docs/architectur
 
 ```bash
 npm install
+```
+
+### CLI Utilities
+You can test any email file directly using the included extraction tool:
+```bash
+npx tsx bin/extract.ts tests/fixtures/complex-forward.eml
 ```
 
 ```typescript
@@ -100,6 +106,7 @@ Each history entry contains its own `from`, `to`, `cc`, `subject`, `date_iso`, `
 - `method:outlook_empty_header`: Detected via permissive rules (No date/email).
 - `method:new_outlook`: Detected via modern localized headers (handles bolding and `mailto:` tags).
 - `method:reply`: Detected via international reply patterns (`On ... wrote:`).
+- `method:crisp`: Detected via standard international patterns (Crisp/Fallback).
 - `content:silent_forward`: The user forwarded the message without adding any text.
 - `date:unparseable`: A date string was found but could not be normalized to ISO.
 
@@ -303,8 +310,11 @@ class MyCustomDetector implements ForwardDetector {
     name = 'my-custom-detector';
     
     // Priority: Lower number = Higher priority.
-    // 0 = Crisp (Default Lib), -10 = Override everything, 10 = Fallback
-    priority = -10;
+    // -100 = Override Everything (Expert Plugins)
+    // -40 to -20 = Specific Build-in Detectors (Outlook, FR, etc.)
+    // 100 = Crisp (Default International Engine)
+    // 150 = Reply (Fallback)
+    priority = -100;
 
     detect(text: string): DetectionResult {
         // Example: Detects '--- START FORWARD ---'
@@ -383,6 +393,24 @@ try {
 } catch (e) {
   console.error(e.message); // "Input must be a string"
 }
+```
+
+## The Expert Cleaner Utility
+
+All built-in detectors use the `Cleaner` utility to ensure consistent text normalization across recursion levels.
+
+### Key Features:
+- **Normalization**: Unifies line breaks (`\r\n` -> `\n`), removes BOM, handles `&nbsp;`.
+- **Memoization**: Cache layer to prevent re-processing the same text multiple times.
+- **Quote Stripping**: Expertly removes `>` prefixes while preserving body structure.
+- **Boundary Detection**: Uses the "Double Newline" rule found in professional parsers.
+
+```typescript
+import { Cleaner } from 'email-deepest-forward/utils/cleaner';
+
+const normalized = Cleaner.normalize(rawText);
+const bodyOnly = Cleaner.extractBody(lines, lastHeaderIndex);
+const quoteFree = Cleaner.stripQuotes(bodyOnly);
 ```
 
 ## Strategy
