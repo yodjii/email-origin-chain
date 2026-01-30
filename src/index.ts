@@ -103,7 +103,7 @@ export async function extractDeepestHybrid(raw: string, options?: Options): Prom
             date_raw,
             date_iso,
             text: cleanText(text),
-            full_body: mimeResult.rawBody,
+            full_body: cleanText(mimeResult.rawBody) || '',
 
             // Confidence
             confidence_score: confidence.score,
@@ -135,7 +135,7 @@ export async function extractDeepestHybrid(raw: string, options?: Options): Prom
             date_raw: null,
             date_iso: null,
             text: cleanText(raw),
-            full_body: raw,
+            full_body: cleanText(raw) || '',
             attachments: [],
             history: [],
             diagnostics: {
