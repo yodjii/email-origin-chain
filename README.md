@@ -76,6 +76,7 @@ The library returns a `ResultObject` with the following structure:
 | `date_raw` | `string \| null` | The original date string found in the email headers. |
 | `date_iso` | `string \| null` | ISO 8601 UTC representation (normalized via `any-date-parser`). |
 | `text` | `string \| null` | Cleaned body content of the deepest message. |
+| `full_body` | `string` | The full decoded text body before chain splitting. |
 | `attachments` | `array` | Metadata for MIME attachments found at the deepest level. |
 | `history` | `array` | **Conversation Chaining**: Full audit trail of the discussion (see below). |
 | `confidence_score` | `number` | Reliability score (0-100) based on signal analysis. |
@@ -144,6 +145,7 @@ Check the [Confidence Scoring Documentation](docs/confidence_scoring.md) for ful
   "from": { "name": "Original Sender Name", "address": "original@source.com" },
   "subject": "Initial Topic",
   "text": "The very first message content.",
+  "full_body": "Check this thread below!\n\n---------- Forwarded message ---------\nFrom: Intermediate Person <inter@company.com>...",
   "history": [
     {
       "depth": 2,
@@ -268,6 +270,7 @@ console.log(result.diagnostics.depth); // 4 (5 messages total)
   "from": { "address": "original@source.com" },
   "subject": "original request",
   "text": "Hello, please forward this back to me.",
+  "full_body": "Check the bottom of this long thread.\n\n---------- Forwarded message ---------\nDe : Intermediate Manager...",
   "history": [
     {
       "depth": 4,
@@ -407,6 +410,7 @@ If you pass a string that isn't an email (e.g., a simple welcome message), the l
 const result = await extractDeepestHybrid("Welcome to our platform!");
 
 console.log(result.from);               // null
+console.log(result.full_body);          // "Welcome to our platform!"
 console.log(result.diagnostics.parsedOk); // false
 console.log(result.text);               // "Welcome to our platform!"
 ```

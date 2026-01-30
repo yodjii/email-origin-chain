@@ -135,6 +135,7 @@ export async function extractDeepestHybrid(raw: string, options?: Options): Prom
             date_raw: null,
             date_iso: null,
             text: cleanText(raw),
+            full_body: raw,
             attachments: [],
             history: [],
             diagnostics: {

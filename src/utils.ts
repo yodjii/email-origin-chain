@@ -261,6 +261,7 @@ export function normalizeParserResult(
         date_raw,
         date_iso,
         text: cleanText(email.body),
+        full_body: email.body || '',
         attachments: [], // TODO: extract if parser provides them
         history: [],
         diagnostics: {
